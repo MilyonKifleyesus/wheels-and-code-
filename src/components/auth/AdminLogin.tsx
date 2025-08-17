@@ -63,24 +63,29 @@ const AdminLogin: React.FC = () => {
     setError("");
     
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { testSupabaseConnection, getConfigurationStatus } = await import("../../lib/supabase");
       
-      if (!supabaseUrl || !supabaseKey) {
-        setError("Supabase environment variables not configured. Check your .env file.");
+      // First check configuration
+      const config = getConfigurationStatus();
+      console.log("📊 Configuration Status:", config);
+      
+      if (!config.isConfigured) {
+        setError(`Environment variables not configured properly:
+        - URL: ${config.hasUrl ? '✅' : '❌'} 
+        - Key: ${config.hasKey ? '✅' : '❌'}
+        - Client: ${config.hasClient ? '✅' : '❌'}`);
         setSuccess("");
         return;
       }
       
-      // Test basic connection
-      const { supabase } = await import("../../lib/supabase");
-      const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+      // Test connection
+      const result = await testSupabaseConnection();
       
-      if (error) {
-        setError(`Database connection failed: ${error.message}`);
+      if (!result.success) {
+        setError(`Database connection failed: ${result.error}`);
         setSuccess("");
       } else {
-        setSuccess(`✅ Database connection successful! Found ${data} profiles.`);
+        setSuccess(`✅ Database connection successful! ${result.session ? 'Active session found' : 'Ready for authentication'}`);
         setError("");
       }
     } catch (err: any) {

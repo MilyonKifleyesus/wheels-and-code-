@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { TrendingUp, DollarSign, Users, Car, Calendar, BarChart3, PieChart, Activity, Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { useBookings } from '../../contexts/BookingContext';
+import { getConfigurationStatus } from '../../lib/supabase';
 
 const AdminDashboard: React.FC = () => {
   const { vehicles } = useVehicles();
   const { bookings } = useBookings();
   const [timeRange, setTimeRange] = useState('30d');
+  
+  // Check environment configuration
+  const config = getConfigurationStatus();
+  console.log("🔧 Admin Dashboard - Environment Status:", config);
 
   // Calculate real metrics from actual data
   const availableVehicles = vehicles.filter(v => v.status === 'available').length;

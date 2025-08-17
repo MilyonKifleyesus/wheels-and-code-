@@ -1,56 +1,36 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Log environment variables for debugging
-console.log("Supabase URL:", supabaseUrl);
-console.log("Supabase Key:", supabaseAnonKey ? "Present" : "Missing");
-console.log("Environment:", import.meta.env.MODE);
-
-// Enhanced environment variable validation
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing Supabase environment variables:");
-  console.error("VITE_SUPABASE_URL:", supabaseUrl ? "✓ Set" : "✗ Missing");
-  console.error(
-    "VITE_SUPABASE_ANON_KEY:",
-    supabaseAnonKey ? "✓ Set" : "✗ Missing"
-  );
+// Environment variable validation and testing
+const validateEnvironmentVariables = () => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
-  // Show instructions for setting up environment variables
-  console.error("\n🔧 Setup Instructions:");
-  console.error("1. Create a .env file in your project root");
-  console.error("2. Add your Supabase credentials:");
-  console.error("   VITE_SUPABASE_URL=https://your-project-id.supabase.co");
-  console.error("   VITE_SUPABASE_ANON_KEY=your-anon-key-here");
+  console.log("🔍 Environment Variable Check:");
+  console.log("==========================================");
+  console.log("VITE_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing");
+  console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing");
+  console.log("Environment Mode:", import.meta.env.MODE);
+  console.log("All Environment Variables:", Object.keys(import.meta.env));
   
-  throw new Error(
-    "Missing Supabase environment variables. Please check your .env file."
-  );
-}
+  if (supabaseUrl) {
+    console.log("URL Value:", supabaseUrl);
+    console.log("URL Format Valid:", supabaseUrl.includes('.supabase.co') ? "✅ Yes" : "❌ No");
+  }
+  
+  if (supabaseAnonKey) {
+    console.log("Key Length:", supabaseAnonKey.length);
+    console.log("Key Format Valid:", supabaseAnonKey.length > 50 ? "✅ Yes" : "❌ No");
+  }
+  
+  return { supabaseUrl, supabaseAnonKey };
+};
 
-// Validate URL format
-if (
-  supabaseUrl &&
-  !supabaseUrl.startsWith("https://") ||
-  !supabaseUrl.includes(".supabase.co")
-) {
-  console.error("Invalid Supabase URL format:", supabaseUrl);
-  throw new Error(
-    "Invalid Supabase URL format. URL should be: https://your-project-id.supabase.co"
-  );
-}
+// Run validation immediately
+const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables();
 
-// Validate key format (basic check)
-if (supabaseAnonKey && supabaseAnonKey.length < 50) {
-  console.error("Supabase anon key appears to be invalid (too short)");
-  throw new Error("Invalid Supabase anon key format");
-}
-
-console.log("Supabase configuration validated successfully");
-console.log("URL:", supabaseUrl);
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Create Supabase client with fallback handling
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -61,31 +41,57 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       eventsPerSecond: 10,
     },
   },
-});
+})
+  : null;
 
-// Test the connection
-if (supabaseUrl && supabaseAnonKey) {
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      console.error("Supabase connection test failed:", error);
-    } else {
-      console.log("Supabase connection test successful");
-      console.log("Current session:", data.session ? "Active" : "None");
-    }
-  });
+// Test connection function
+export const testSupabaseConnection = async () => {
+  console.log("🧪 Testing Supabase Connection...");
   
-  // Test database connection
-  // Simplified connection test that won't fail on RLS issues
-  supabase.auth.getSession().then(({ data, error }) => {
+  if (!supabase) {
+    console.log("❌ Supabase client not initialized (missing environment variables)");
+    return { success: false, error: "Missing environment variables" };
+  }
+  
+  try {
+    // Test auth connection (doesn't require RLS)
+    const { data, error } = await supabase.auth.getSession();
+    
     if (error) {
-      console.warn("Auth session check failed:", error.message);
-    } else {
-      console.log("Supabase auth connection successful");
+      console.log("❌ Auth connection failed:", error.message);
+      return { success: false, error: error.message };
     }
-  });
-} else {
-  console.warn("Skipping connection test due to missing credentials");
+    
+    console.log("✅ Supabase connection successful!");
+    console.log("Session status:", data.session ? "Active session" : "No active session");
+    return { success: true, session: data.session };
+  } catch (err: any) {
+    console.log("❌ Connection test failed:", err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+// Run initial connection test
+if (supabase) {
+  testSupabaseConnection();
 }
+
+// Check if environment variables are properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && supabase);
+};
+
+// Get configuration status for debugging
+export const getConfigurationStatus = () => {
+  return {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    hasClient: !!supabase,
+    urlValue: supabaseUrl,
+    keyLength: supabaseAnonKey?.length || 0,
+    isConfigured: isSupabaseConfigured()
+  };
+};
 
 // Database types
 export interface Database {
