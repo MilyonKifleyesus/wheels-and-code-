@@ -159,11 +159,7 @@ export interface Database {
           id: string;
           customer_id: string | null;
           service_id: string | null;
-          customer_name: string;
-          customer_email: string;
-          customer_phone: string;
-          service: string;
-          vehicle: string;
+          vehicle_info: string;
           booking_date: string;
           booking_time: string;
           status:
@@ -175,16 +171,15 @@ export interface Database {
           notes: string | null;
           estimated_cost: number | null;
           actual_cost: number | null;
-          assigned_technician: string | null;
+          location_id: string | null;
+          assigned_staff: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          customer_name: string;
-          customer_email: string;
-          customer_phone: string;
-          service: string;
-          vehicle: string;
+          customer_id?: string | null;
+          service_id?: string | null;
+          vehicle_info: string;
           booking_date: string;
           booking_time: string;
           status?:
@@ -196,14 +191,13 @@ export interface Database {
           notes?: string | null;
           estimated_cost?: number | null;
           actual_cost?: number | null;
-          assigned_technician?: string | null;
+          location_id?: string | null;
+          assigned_staff?: string | null;
         };
         Update: {
-          customer_name?: string;
-          customer_email?: string;
-          customer_phone?: string;
-          service?: string;
-          vehicle?: string;
+          customer_id?: string | null;
+          service_id?: string | null;
+          vehicle_info?: string;
           booking_date?: string;
           booking_time?: string;
           status?:
@@ -215,7 +209,8 @@ export interface Database {
           notes?: string | null;
           estimated_cost?: number | null;
           actual_cost?: number | null;
-          assigned_technician?: string | null;
+          location_id?: string | null;
+          assigned_staff?: string | null;
         };
       };
       content_sections: {

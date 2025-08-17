@@ -46,13 +46,28 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
       // Add some sample data if no bookings exist
       const { count } = await supabase
         .from("bookings")
-        .select("*", { count: 'exact', head: true });
+        .select("id", { count: 'exact', head: true });
 
       if (count === 0) {
 
       const { data, error } = await supabase
         .from("bookings")
-        .select("*")
+        .select(`
+          id,
+          customer_id,
+          service_id,
+          vehicle_info,
+          booking_date,
+          booking_time,
+          status,
+          notes,
+          estimated_cost,
+          actual_cost,
+          location_id,
+          assigned_staff,
+          created_at,
+          updated_at
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -64,22 +79,14 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
         if (!data || data.length === 0) {
           const sampleBookings = [
             {
-              customer_name: 'John Smith',
-              customer_email: 'john@example.com',
-              customer_phone: '(416) 555-0123',
-              service: 'Oil Change',
-              vehicle: '2020 BMW M3',
+              vehicle_info: '2020 BMW M3',
               booking_date: '2024-01-20',
               booking_time: '10:00',
               status: 'confirmed',
               estimated_cost: 150
             },
             {
-              customer_name: 'Sarah Johnson',
-              customer_email: 'sarah@example.com',
-              customer_phone: '(416) 555-0456',
-              service: 'Brake Service',
-              vehicle: '2021 Mercedes C300',
+              vehicle_info: '2021 Mercedes C300',
               booking_date: '2024-01-22',
               booking_time: '14:00',
               status: 'pending',
@@ -98,7 +105,22 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
           // Fetch again after inserting samples
           const { data: newData } = await supabase
             .from("bookings")
-            .select("*")
+            .select(`
+              id,
+              customer_id,
+              service_id,
+              vehicle_info,
+              booking_date,
+              booking_time,
+              status,
+              notes,
+              estimated_cost,
+              actual_cost,
+              location_id,
+              assigned_staff,
+              created_at,
+              updated_at
+            `)
             .order("created_at", { ascending: false });
           
           setBookings(newData || []);
