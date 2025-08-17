@@ -179,7 +179,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       console.log("🔐 Starting sign in process for:", email);
-      setLoading(true);
       setUser(null); // Clear any existing user state
       
       // First, try to sign in
@@ -209,34 +208,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (signUpError) {
             console.error("❌ Admin creation failed:", signUpError);
-            setLoading(false);
             return { success: false, error: `Failed to create admin user: ${signUpError.message}` };
           }
 
           if (signUpData.user) {
             console.log("✅ Admin user created, creating profile...");
             await createUserProfile(signUpData.user.id, email);
-            setLoading(false);
             return { success: true };
           }
         }
         
-        setLoading(false);
         return { success: false, error: signInError.message };
       }
 
       if (signInData.user) {
         console.log("✅ Sign in successful for:", signInData.user.email);
         // Profile will be fetched by the auth state change listener
-        setLoading(false);
         return { success: true };
       }
 
-      setLoading(false);
       return { success: false, error: "Login failed - no user data returned" };
     } catch (error: any) {
       console.error("❌ Sign in error:", error);
-      setLoading(false);
       return { success: false, error: error.message || "Login failed" };
     }
   };

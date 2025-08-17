@@ -9,6 +9,7 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const { signIn, loading } = useAuth();
@@ -17,11 +18,13 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setIsSubmitting(true);
 
     console.log("🔐 Admin login attempt starting...");
 
     if (!email || !password) {
       setError("Please fill in all fields");
+      setIsSubmitting(false);
       return;
     }
 
@@ -37,17 +40,20 @@ const AdminLogin: React.FC = () => {
         
         // Use router navigation instead of page reload
         setTimeout(() => {
+          setIsSubmitting(false);
           navigate("/admin", { replace: true });
         }, 1000);
       } else {
         console.error("❌ Admin login failed:", result.error);
         setError(result.error || "Login failed. Please try again.");
         setSuccess("");
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error("❌ Login error:", error);
       setError("Login system error. Please try again.");
       setSuccess("");
+      setIsSubmitting(false);
     }
   };
 
@@ -117,7 +123,7 @@ const AdminLogin: React.FC = () => {
             <button
               type="button"
               onClick={fillAdminCredentials}
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full bg-acid-yellow/10 border border-acid-yellow/20 text-acid-yellow py-2 px-4 rounded-sm text-sm font-medium hover:bg-acid-yellow/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               <User className="w-4 h-4" />
@@ -127,7 +133,7 @@ const AdminLogin: React.FC = () => {
             <button
               type="button"
               onClick={testConnection}
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full bg-blue-600/10 border border-blue-600/20 text-blue-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-blue-600/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               <Database className="w-4 h-4" />
@@ -165,7 +171,7 @@ const AdminLogin: React.FC = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 disabled:opacity-50"
                 placeholder="admin@company.com"
               />
@@ -187,14 +193,14 @@ const AdminLogin: React.FC = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
+                  disabled={isSubmitting}
                   className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 pr-12 disabled:opacity-50"
                   placeholder="admin123456"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
+                  disabled={isSubmitting}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors disabled:opacity-50"
                 >
                   {showPassword ? (
@@ -209,10 +215,10 @@ const AdminLogin: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full bg-acid-yellow text-black font-bold py-3 px-4 rounded-lg hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:ring-offset-2 focus:ring-offset-dark-graphite transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                   <span>Signing In...</span>
