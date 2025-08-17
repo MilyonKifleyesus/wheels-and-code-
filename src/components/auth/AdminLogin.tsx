@@ -17,24 +17,22 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
     setError("");
     
-    // Pre-fill admin credentials for testing
-    if (!email && !password) {
-      setEmail("admin@company.com");
-      setPassword("admin123456");
-    }
+    // Use current form values or default admin credentials
+    const loginEmail = email || "admin@company.com";
+    const loginPassword = password || "admin123456";
 
-    if (!email || !password) {
+    if (!loginEmail || !loginPassword) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
     }
 
-    console.log("Attempting login with:", { email, password: "***" });
+    console.log("Attempting login with:", { email: loginEmail, password: "***" });
     
     // Show loading state
     setError("Connecting to database...");
     
-    const result = await signIn(email, password);
+    const result = await signIn(loginEmail, loginPassword);
 
     if (!result.success) {
       setError(result.error || "Login failed");

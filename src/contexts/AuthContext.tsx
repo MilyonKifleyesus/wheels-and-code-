@@ -184,6 +184,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const createAdminUser = async (email: string, password: string) => {
     try {
+      console.log("🔧 Creating admin user...");
+      
       // Try to sign up the admin user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -198,10 +200,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (error) {
         console.error("Admin signup error:", error);
+        
+        // If user already exists, try to sign in instead
+        if (error.message.includes("already registered")) {
+          console.log("Admin user already exists, trying to sign in...");
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (signInError) {
+            throw signInError;
+          }
+          
+          if (signInData.user) {
+            await fetchUserProfile(signInData.user.id);
+            return { success: true };
+          }
+        }
+        
         throw error;
       }
 
       if (data.user) {
+        console.log("✅ Admin user created successfully");
+        
         // Create admin profile
         const { error: profileError } = await supabase
           .from("profiles")
@@ -216,6 +239,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (profileError) {
           console.error("Admin profile creation error:", profileError);
+          // Don't throw error if profile already exists
+          if (!profileError.message.includes("duplicate key")) {
+            throw profileError;
+          }
         }
 
         setUser({
