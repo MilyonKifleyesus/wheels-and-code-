@@ -73,6 +73,15 @@ if (supabaseUrl && supabaseAnonKey) {
       console.log("Current session:", data.session ? "Active" : "None");
     }
   });
+  
+  // Test database connection
+  supabase.from('profiles').select('count', { count: 'exact', head: true }).then(({ error, count }) => {
+    if (error) {
+      console.error("Database connection test failed:", error);
+    } else {
+      console.log("Database connection test successful. Profiles count:", count);
+    }
+  });
 } else {
   console.warn("Skipping connection test due to missing credentials");
 }

@@ -40,10 +40,110 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
+      
+      // If no data, create default sections
+      if (!data || data.length === 0) {
+        const defaultSections = [
+          {
+            section_type: 'hero',
+            title: 'Hero Section',
+            visible: true,
+            sort_order: 1,
+            content: {
+              heading: 'PRECISION PERFORMANCE PERFECTION',
+              subheading: 'Where automotive excellence meets cutting-edge service',
+              description: 'Experience the pinnacle of automotive luxury and performance',
+              buttonText: 'BROWSE CARS',
+              buttonLink: '/inventory',
+              backgroundColor: '#0B0B0C',
+              textColor: '#FFFFFF',
+              accentColor: '#D7FF00'
+            }
+          },
+          {
+            section_type: 'services',
+            title: 'Services Section',
+            visible: true,
+            sort_order: 2,
+            content: {
+              heading: 'PRECISION SERVICE',
+              description: 'Expert automotive service with state-of-the-art equipment and certified technicians',
+              backgroundColor: '#0B0B0C',
+              textColor: '#FFFFFF',
+              accentColor: '#D7FF00'
+            }
+          },
+          {
+            section_type: 'inventory',
+            title: 'Inventory Section',
+            visible: true,
+            sort_order: 3,
+            content: {
+              heading: 'NEW ARRIVALS',
+              description: 'Latest additions to our premium collection',
+              backgroundColor: '#141518',
+              textColor: '#FFFFFF',
+              accentColor: '#D7FF00'
+            }
+          },
+          {
+            section_type: 'trust',
+            title: 'Trust Section',
+            visible: true,
+            sort_order: 4,
+            content: {
+              heading: 'TRUSTED BY THOUSANDS',
+              description: 'Join thousands of satisfied customers who trust us with their automotive needs',
+              backgroundColor: '#0B0B0C',
+              textColor: '#FFFFFF',
+              accentColor: '#D7FF00'
+            }
+          }
+        ];
+
+        // Insert default sections
+        for (const section of defaultSections) {
+          try {
+            await supabase.from('content_sections').insert([section]);
+          } catch (insertError) {
+            console.warn('Could not insert default section:', insertError);
+          }
+        }
+
+        // Fetch again after inserting defaults
+        const { data: newData } = await supabase
+          .from('content_sections')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        
+        setSections(newData || []);
+        return;
+      }
+      
       setSections(data || []);
     } catch (err) {
       console.error('Error fetching content sections:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch content sections');
+      
+      // Set fallback sections if database fails
+      setSections([
+        {
+          id: 'hero-fallback',
+          section_type: 'hero',
+          title: 'Hero Section',
+          visible: true,
+          sort_order: 1,
+          content: {
+            heading: 'PRECISION PERFORMANCE PERFECTION',
+            subheading: 'Where automotive excellence meets cutting-edge service',
+            buttonText: 'BROWSE CARS',
+            buttonLink: '/inventory',
+            accentColor: '#D7FF00'
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ]);
     } finally {
       setLoading(false);
     }

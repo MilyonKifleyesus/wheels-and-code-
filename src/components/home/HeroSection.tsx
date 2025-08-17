@@ -6,13 +6,28 @@ import Car3D from '../ui/Car3D';
 import SpecTicker from '../ui/SpecTicker';
 
 const HeroSection: React.FC = () => {
-  const { getSectionByType } = useContent();
+  const { getSectionByType, loading } = useContent();
   const [isLoaded, setIsLoaded] = useState(false);
   
   const heroContent = getSectionByType('hero');
   
-  // Don't render if section is hidden
-  if (!heroContent?.visible) {
+  // Show loading state while content is loading
+  if (loading) {
+    return (
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite"></div>
+        <div className="relative z-10 text-center">
+          <div className="animate-pulse">
+            <div className="h-16 bg-gray-700 rounded mb-4 w-96 mx-auto"></div>
+            <div className="h-8 bg-gray-700 rounded mb-8 w-64 mx-auto"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  // Don't render if section is hidden (but show fallback if no content)
+  if (heroContent && !heroContent.visible) {
     return null;
   }
 

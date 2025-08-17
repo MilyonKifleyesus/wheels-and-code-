@@ -65,7 +65,8 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
             status: 'available',
             images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
             specs: { hp: 473, torque: 600, acceleration: '4.1s' },
-            features: ['Premium Sound', 'Navigation', 'Heated Seats']
+            features: ['Premium Sound', 'Navigation', 'Heated Seats'],
+            tags: ['NEW', 'FEATURED']
           },
           {
             make: 'Mercedes',
@@ -76,7 +77,32 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
             status: 'available',
             images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
             specs: { hp: 503, torque: 700, acceleration: '3.9s' },
-            features: ['AMG Performance', 'Premium Interior', 'Sport Exhaust']
+            features: ['AMG Performance', 'Premium Interior', 'Sport Exhaust'],
+            tags: ['PERFORMANCE']
+          },
+          {
+            make: 'PORSCHE',
+            model: '911 Turbo S',
+            year: 2023,
+            price: 245000,
+            mileage: 2500,
+            status: 'available' as const,
+            images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            specs: { hp: 640, torque: 800, acceleration: '2.7s' },
+            features: ['Sport Chrono', 'Carbon Fiber', 'Premium Audio'],
+            tags: ['NEW', 'LUXURY']
+          },
+          {
+            make: 'FERRARI',
+            model: 'F8 Tributo',
+            year: 2022,
+            price: 325000,
+            mileage: 1200,
+            status: 'available' as const,
+            images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            specs: { hp: 710, torque: 770, acceleration: '2.9s' },
+            features: ['Carbon Fiber', 'Racing Seats', 'Track Package'],
+            tags: ['EXOTIC', 'PERFORMANCE']
           }
         ];
 

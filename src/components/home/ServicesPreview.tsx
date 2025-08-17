@@ -14,12 +14,31 @@ interface Service {
 
 const ServicesPreview: React.FC = () => {
   const [selectedService, setSelectedService] = useState<number | null>(null);
-  const { getSectionByType } = useContent();
+  const { getSectionByType, loading } = useContent();
   
   const servicesContent = getSectionByType('services');
   
-  // Don't render if section is hidden
-  if (!servicesContent?.visible) {
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="py-16 bg-matte-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded mb-4 w-64 mx-auto"></div>
+            <div className="h-4 bg-gray-700 rounded mb-8 w-96 mx-auto"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-gray-700 rounded-lg h-64"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  // Don't render if section is hidden (but show fallback if no content)
+  if (servicesContent && !servicesContent.visible) {
     return null;
   }
 

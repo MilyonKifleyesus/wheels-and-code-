@@ -7,13 +7,32 @@ import { useVehicles } from '../../contexts/VehicleContext';
 
 const NewArrivals: React.FC = () => {
   const { vehicles } = useVehicles();
-  const { getSectionByType } = useContent();
+  const { getSectionByType, loading } = useContent();
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const inventoryContent = getSectionByType('inventory');
   
-  // Don't render if section is hidden
-  if (!inventoryContent?.visible) {
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="py-16 bg-carbon-gray">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded mb-4 w-64"></div>
+            <div className="h-4 bg-gray-700 rounded mb-8 w-96"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-gray-700 rounded-lg h-96"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  // Don't render if section is hidden (but show fallback if no content)
+  if (inventoryContent && !inventoryContent.visible) {
     return null;
   }
 
