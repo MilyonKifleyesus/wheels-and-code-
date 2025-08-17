@@ -43,13 +43,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
         throw new Error("Supabase client not initialized");
       }
 
-      // Add some sample data if no bookings exist
-      const { count } = await supabase
-        .from("bookings")
-        .select("id", { count: 'exact', head: true });
-
-      if (count === 0) {
-
+      // Fetch bookings data
       const { data, error } = await supabase
         .from("bookings")
         .select(`
@@ -75,57 +69,56 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
         throw error;
       }
 
-        // If no data, add sample bookings
-        if (!data || data.length === 0) {
-          const sampleBookings = [
-            {
-              vehicle_info: '2020 BMW M3',
-              booking_date: '2024-01-20',
-              booking_time: '10:00',
-              status: 'confirmed',
-              estimated_cost: 150
-            },
-            {
-              vehicle_info: '2021 Mercedes C300',
-              booking_date: '2024-01-22',
-              booking_time: '14:00',
-              status: 'pending',
-              estimated_cost: 450
-            }
-          ];
-
-          for (const booking of sampleBookings) {
-            try {
-              await supabase.from("bookings").insert([booking]);
-            } catch (insertError) {
-              console.warn("Could not insert sample booking:", insertError);
-            }
+      // If no data, add sample bookings
+      if (!data || data.length === 0) {
+        const sampleBookings = [
+          {
+            vehicle_info: '2020 BMW M3',
+            booking_date: '2024-01-20',
+            booking_time: '10:00',
+            status: 'confirmed',
+            estimated_cost: 150
+          },
+          {
+            vehicle_info: '2021 Mercedes C300',
+            booking_date: '2024-01-22',
+            booking_time: '14:00',
+            status: 'pending',
+            estimated_cost: 450
           }
+        ];
 
-          // Fetch again after inserting samples
-          const { data: newData } = await supabase
-            .from("bookings")
-            .select(`
-              id,
-              customer_id,
-              service_id,
-              vehicle_info,
-              booking_date,
-              booking_time,
-              status,
-              notes,
-              estimated_cost,
-              actual_cost,
-              location_id,
-              assigned_staff,
-              created_at,
-              updated_at
-            `)
-            .order("created_at", { ascending: false });
-          
-          setBookings(newData || []);
-          return;
+        for (const booking of sampleBookings) {
+          try {
+            await supabase.from("bookings").insert([booking]);
+          } catch (insertError) {
+            console.warn("Could not insert sample booking:", insertError);
+          }
         }
+
+        // Fetch again after inserting samples
+        const { data: newData } = await supabase
+          .from("bookings")
+          .select(`
+            id,
+            customer_id,
+            service_id,
+            vehicle_info,
+            booking_date,
+            booking_time,
+            status,
+            notes,
+            estimated_cost,
+            actual_cost,
+            location_id,
+            assigned_staff,
+            created_at,
+            updated_at
+          `)
+          .order("created_at", { ascending: false });
+        
+        setBookings(newData || []);
+        return;
       }
 
       setBookings(data || []);
