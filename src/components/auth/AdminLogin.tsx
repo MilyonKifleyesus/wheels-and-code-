@@ -40,8 +40,8 @@ const AdminLogin: React.FC = () => {
         
         // Use router navigation instead of page reload
         setTimeout(() => {
-          setIsSubmitting(false);
           navigate("/admin", { replace: true });
+          setIsSubmitting(false);
         }, 1000);
       } else {
         console.error("❌ Admin login failed:", result.error);

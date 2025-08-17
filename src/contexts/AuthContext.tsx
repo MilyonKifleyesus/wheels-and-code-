@@ -178,7 +178,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("🔐 Starting sign in process for:", email);
       setUser(null); // Clear any existing user state
       
       // First, try to sign in
@@ -189,6 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (signInError) {
         console.log("⚠️ Sign in failed:", signInError.message);
+        setLoading(false);
         
         // If user doesn't exist and this is admin, try to create admin user
         if (email === "admin@company.com" && signInError.message.includes("Invalid login credentials")) {
@@ -208,6 +208,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (signUpError) {
             console.error("❌ Admin creation failed:", signUpError);
+            setLoading(false);
             return { success: false, error: `Failed to create admin user: ${signUpError.message}` };
           }
 
@@ -218,6 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
+        setLoading(false);
         return { success: false, error: signInError.message };
       }
 
@@ -227,9 +229,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: true };
       }
 
+      setLoading(false);
       return { success: false, error: "Login failed - no user data returned" };
     } catch (error: any) {
       console.error("❌ Sign in error:", error);
+      setLoading(false);
       return { success: false, error: error.message || "Login failed" };
     }
   };
