@@ -14,7 +14,7 @@ interface Service {
 
 const ServicesPreview: React.FC = () => {
   const [selectedService, setSelectedService] = useState<number | null>(null);
-  const { getSectionByType, loading } = useContent();
+  const { getSectionByType } = useContent();
   
   const servicesContent = getSectionByType('services');
   
@@ -169,4 +169,4 @@ const ServicesPreview: React.FC = () => {
   );
 };
 
-export default ServicesPreview;
+export default HeroSection;

@@ -1,46 +1,43 @@
 import React, { useState } from "react";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Database, User } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState("admin@company.com"); // Pre-fill admin email
-  const [password, setPassword] = useState("admin123456"); // Pre-fill admin password
+  const [email, setEmail] = useState("admin@company.com");
+  const [password, setPassword] = useState("admin123456");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
-  const { signIn } = useAuth();
+  const { signIn, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
     setSuccess("");
 
     console.log("🔐 Admin login attempt starting...");
-    console.log("📧 Email:", email);
-    console.log("🔑 Password:", password ? "***provided***" : "***missing***");
 
     if (!email || !password) {
       setError("Please fill in all fields");
-      setLoading(false);
       return;
     }
 
     try {
-      setSuccess("Connecting to admin system...");
+      setSuccess("Signing in...");
       
       const result = await signIn(email, password);
 
       if (result.success) {
         console.log("✅ Admin login successful!");
-        setSuccess("Login successful! Redirecting to admin dashboard...");
+        setSuccess("Login successful! Redirecting...");
         setError("");
         
-        // Small delay to show success message
+        // Use router navigation instead of page reload
         setTimeout(() => {
-          window.location.reload(); // Force refresh to ensure admin state is properly set
+          navigate("/admin", { replace: true });
         }, 1000);
       } else {
         console.error("❌ Admin login failed:", result.error);
@@ -52,8 +49,6 @@ const AdminLogin: React.FC = () => {
       setError("Login system error. Please try again.");
       setSuccess("");
     }
-
-    setLoading(false);
   };
 
   const fillAdminCredentials = () => {
@@ -65,16 +60,27 @@ const AdminLogin: React.FC = () => {
 
   const testConnection = async () => {
     setSuccess("Testing database connection...");
+    setError("");
     
     try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        setError("Supabase environment variables not configured. Check your .env file.");
+        setSuccess("");
+        return;
+      }
+      
       // Test basic connection
+      const { supabase } = await import("../../lib/supabase");
       const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
       
       if (error) {
         setError(`Database connection failed: ${error.message}`);
         setSuccess("");
       } else {
-        setSuccess(`Database connection successful! Found ${data} profiles.`);
+        setSuccess(`✅ Database connection successful! Found ${data} profiles.`);
         setError("");
       }
     } catch (err: any) {
@@ -106,17 +112,21 @@ const AdminLogin: React.FC = () => {
             <button
               type="button"
               onClick={fillAdminCredentials}
-              className="w-full bg-acid-yellow/10 border border-acid-yellow/20 text-acid-yellow py-2 px-4 rounded-sm text-sm font-medium hover:bg-acid-yellow/20 transition-colors duration-300"
+              disabled={loading}
+              className="w-full bg-acid-yellow/10 border border-acid-yellow/20 text-acid-yellow py-2 px-4 rounded-sm text-sm font-medium hover:bg-acid-yellow/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
-              Use Default Admin Credentials
+              <User className="w-4 h-4" />
+              <span>Use Default Admin Credentials</span>
             </button>
             
             <button
               type="button"
               onClick={testConnection}
-              className="w-full bg-blue-600/10 border border-blue-600/20 text-blue-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-blue-600/20 transition-colors duration-300"
+              disabled={loading}
+              className="w-full bg-blue-600/10 border border-blue-600/20 text-blue-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-blue-600/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
-              Test Database Connection
+              <Database className="w-4 h-4" />
+              <span>Test Database Connection</span>
             </button>
           </div>
           
@@ -150,7 +160,8 @@ const AdminLogin: React.FC = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 disabled:opacity-50"
                 placeholder="admin@company.com"
               />
             </div>
@@ -171,13 +182,15 @@ const AdminLogin: React.FC = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 pr-12"
+                  disabled={loading}
+                  className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 pr-12 disabled:opacity-50"
                   placeholder="admin123456"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors"
+                  disabled={loading}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors disabled:opacity-50"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />

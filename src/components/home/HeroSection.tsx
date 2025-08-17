@@ -6,8 +6,8 @@ import Car3D from '../ui/Car3D';
 import SpecTicker from '../ui/SpecTicker';
 
 const HeroSection: React.FC = () => {
-  const { getSectionByType, loading } = useContent();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { getSectionByType } = useContent();
+  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
   
   const heroContent = getSectionByType('hero');
   
@@ -24,9 +24,8 @@ const HeroSection: React.FC = () => {
   };
 
   useEffect(() => {
-    // Simulate loading delay for hero assets
-    const timer = setTimeout(() => setIsLoaded(true), 800);
-    return () => clearTimeout(timer);
+    // Ensure component is marked as loaded
+    setIsLoaded(true);
   }, []);
 
   return (
@@ -45,32 +44,18 @@ const HeroSection: React.FC = () => {
           <div className="order-2 lg:order-1 space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-none">
-                {content.heading?.split(' ').map((word, index) => (
-                  <span 
-                    key={index} 
-                    className={`block ${index === 1 ? 'text-acid-yellow' : 'text-white'}`}
-                    style={{ color: index === 1 ? content.accentColor : content.textColor }}
-                  >
-                    {word}
-                  </span>
-                )) || (
-                  <>
-                    <span className="block text-white">PRECISION</span>
-                    <span className="block text-acid-yellow">PERFORMANCE</span>
-                    <span className="block text-white">PERFECTION</span>
-                  </>
-                )}
+                <span className="block text-white">PRECISION</span>
+                <span className="block text-acid-yellow">PERFORMANCE</span>
+                <span className="block text-white">PERFECTION</span>
               </h1>
               
               <p className="text-xl text-gray-300 max-w-lg font-light leading-relaxed">
                 {content.subheading || 'Where automotive excellence meets cutting-edge service'}
               </p>
               
-              {content.description && (
-                <p className="text-lg text-gray-400 max-w-lg">
-                  {content.description}
-                </p>
-              )}
+              <p className="text-lg text-gray-400 max-w-lg">
+                {content.description || 'Experience the pinnacle of automotive luxury and performance'}
+              </p>
             </div>
 
             {/* CTA Buttons */}
@@ -78,7 +63,6 @@ const HeroSection: React.FC = () => {
               <Link 
                 to={content.buttonLink || '/inventory'} 
                 className="group bg-acid-yellow text-black px-8 py-4 rounded-sm font-bold tracking-wider hover:bg-neon-lime transition-all duration-300 flex items-center justify-center space-x-2"
-                style={{ backgroundColor: content.accentColor }}
               >
                 <span>{content.buttonText || 'BROWSE CARS'}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -107,9 +91,7 @@ const HeroSection: React.FC = () => {
 
           {/* 3D Car Column */}
           <div className="order-1 lg:order-2 flex items-center justify-center">
-            <div className={`transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-              <Car3D />
-            </div>
+            <Car3D />
           </div>
         </div>
       </div>

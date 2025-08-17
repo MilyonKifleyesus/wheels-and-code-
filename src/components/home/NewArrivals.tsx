@@ -1,13 +1,12 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, BarChart3, Eye } from 'lucide-react';
 import VehicleCard from '../ui/VehicleCard';
 import { useContent } from '../../contexts/ContentContext';
 import { useVehicles } from '../../contexts/VehicleContext';
 
 const NewArrivals: React.FC = () => {
   const { vehicles } = useVehicles();
-  const { getSectionByType, loading } = useContent();
+  const { getSectionByType } = useContent();
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const inventoryContent = getSectionByType('inventory');
@@ -37,23 +36,24 @@ const NewArrivals: React.FC = () => {
           </Link>
         </div>
 
-        {/* Horizontal Scroll Container */}
-        <div 
-          ref={scrollRef}
-          className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {displayVehicles.map((vehicle) => (
-            <div key={vehicle.id} className="flex-none w-80 sm:w-96 snap-center">
-              <VehicleCard vehicle={vehicle} />
-            </div>
-          ))}
-          
-          {/* Show message if no vehicles */}
-          {displayVehicles.length === 0 && (
-            <div className="w-full text-center py-12">
-              <p className="text-gray-400">Loading premium vehicles...</p>
-            </div>
+        {/* Vehicle Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayVehicles.length > 0 ? (
+            displayVehicles.map((vehicle) => (
+              <VehicleCard key={vehicle.id} vehicle={vehicle} />
+            ))
+          ) : (
+            // Show loading placeholders
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="bg-dark-graphite border border-gray-800 rounded-lg overflow-hidden animate-pulse">
+                <div className="aspect-video bg-gray-700"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-6 bg-gray-700 rounded w-full"></div>
+                </div>
+              </div>
+            ))
           )}
         </div>
 
