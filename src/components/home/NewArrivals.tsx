@@ -31,10 +31,16 @@ const NewArrivals: React.FC = () => {
     );
   }
   
-  // Don't render if section is hidden (but show fallback if no content)
-  if (inventoryContent && !inventoryContent.visible) {
+  // Always show inventory section unless explicitly hidden
+  if (inventoryContent && inventoryContent.visible === false) {
     return null;
   }
+
+  // Fallback content
+  const content = inventoryContent?.content || {
+    heading: 'NEW ARRIVALS',
+    description: 'Latest additions to our premium collection'
+  };
 
   // Show only the first 4 vehicles for the homepage
   const displayVehicles = vehicles.slice(0, 4);
@@ -46,9 +52,9 @@ const NewArrivals: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-              {inventoryContent.content.heading || 'NEW ARRIVALS'}
+              {content.heading || 'NEW ARRIVALS'}
             </h2>
-            <p className="text-gray-400 mt-2">{inventoryContent.content.description || 'Latest additions to our premium collection'}</p>
+            <p className="text-gray-400 mt-2">{content.description || 'Latest additions to our premium collection'}</p>
           </div>
           <Link to="/inventory" className="hidden md:block text-acid-yellow hover:text-neon-lime transition-colors duration-300 text-sm font-bold tracking-wider">
             VIEW ALL →
@@ -66,6 +72,13 @@ const NewArrivals: React.FC = () => {
               <VehicleCard vehicle={vehicle} />
             </div>
           ))}
+          
+          {/* Show message if no vehicles */}
+          {displayVehicles.length === 0 && (
+            <div className="w-full text-center py-12">
+              <p className="text-gray-400">Loading premium vehicles...</p>
+            </div>
+          )}
         </div>
 
         {/* Mobile View All */}

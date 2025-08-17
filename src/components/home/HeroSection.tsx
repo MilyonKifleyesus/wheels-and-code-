@@ -26,10 +26,23 @@ const HeroSection: React.FC = () => {
     );
   }
   
-  // Don't render if section is hidden (but show fallback if no content)
-  if (heroContent && !heroContent.visible) {
+  // Always show hero section - it's critical for homepage
+  // Only hide if explicitly set to hidden AND we have content
+  if (heroContent && heroContent.visible === false) {
     return null;
   }
+
+  // Fallback content if no hero content exists
+  const content = heroContent?.content || {
+    heading: 'PRECISION PERFORMANCE PERFECTION',
+    subheading: 'Where automotive excellence meets cutting-edge service',
+    description: 'Experience the pinnacle of automotive luxury and performance',
+    buttonText: 'BROWSE CARS',
+    buttonLink: '/inventory',
+    backgroundColor: '#0B0B0C',
+    textColor: '#FFFFFF',
+    accentColor: '#D7FF00'
+  };
 
   useEffect(() => {
     // Simulate loading delay for hero assets
@@ -53,11 +66,11 @@ const HeroSection: React.FC = () => {
           <div className="order-2 lg:order-1 space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-none">
-                {heroContent.content.heading?.split(' ').map((word, index) => (
+                {content.heading?.split(' ').map((word, index) => (
                   <span 
                     key={index} 
                     className={`block ${index === 1 ? 'text-acid-yellow' : 'text-white'}`}
-                    style={{ color: index === 1 ? heroContent.content.accentColor : heroContent.content.textColor }}
+                    style={{ color: index === 1 ? content.accentColor : content.textColor }}
                   >
                     {word}
                   </span>
@@ -71,12 +84,12 @@ const HeroSection: React.FC = () => {
               </h1>
               
               <p className="text-xl text-gray-300 max-w-lg font-light leading-relaxed">
-                {heroContent.content.subheading || 'Where automotive excellence meets cutting-edge service'}
+                {content.subheading || 'Where automotive excellence meets cutting-edge service'}
               </p>
               
-              {heroContent.content.description && (
+              {content.description && (
                 <p className="text-lg text-gray-400 max-w-lg">
-                  {heroContent.content.description}
+                  {content.description}
                 </p>
               )}
             </div>
@@ -84,11 +97,11 @@ const HeroSection: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link 
-                to={heroContent.content.buttonLink || '/inventory'} 
+                to={content.buttonLink || '/inventory'} 
                 className="group bg-acid-yellow text-black px-8 py-4 rounded-sm font-bold tracking-wider hover:bg-neon-lime transition-all duration-300 flex items-center justify-center space-x-2"
-                style={{ backgroundColor: heroContent.content.accentColor }}
+                style={{ backgroundColor: content.accentColor }}
               >
-                <span>{heroContent.content.buttonText || 'BROWSE CARS'}</span>
+                <span>{content.buttonText || 'BROWSE CARS'}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               

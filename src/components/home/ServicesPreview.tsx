@@ -37,10 +37,16 @@ const ServicesPreview: React.FC = () => {
     );
   }
   
-  // Don't render if section is hidden (but show fallback if no content)
-  if (servicesContent && !servicesContent.visible) {
+  // Always show services section unless explicitly hidden
+  if (servicesContent && servicesContent.visible === false) {
     return null;
   }
+
+  // Fallback content
+  const content = servicesContent?.content || {
+    heading: 'PRECISION SERVICE',
+    description: 'Expert automotive service with state-of-the-art equipment and certified technicians'
+  };
 
   const services: Service[] = [
     {
@@ -99,10 +105,10 @@ const ServicesPreview: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4">
-            {servicesContent.content.heading || 'PRECISION SERVICE'}
+            {content.heading || 'PRECISION SERVICE'}
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            {servicesContent.content.description || 'Expert automotive service with state-of-the-art equipment and certified technicians'}
+            {content.description || 'Expert automotive service with state-of-the-art equipment and certified technicians'}
           </p>
         </div>
 

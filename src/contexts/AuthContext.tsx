@@ -154,6 +154,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("🔐 Attempting sign in with:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -172,12 +174,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
+        console.log("✅ Sign in successful, fetching profile...");
         await fetchUserProfile(data.user.id);
         return { success: true };
       }
 
       return { success: false, error: "Login failed" };
     } catch (error: any) {
+      console.error("❌ Sign in failed:", error);
       return { success: false, error: error.message || "Login failed" };
     }
   };
@@ -210,10 +214,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
           
           if (signInError) {
+            console.error("❌ Admin sign in failed:", signInError);
             throw signInError;
           }
           
           if (signInData.user) {
+            console.log("✅ Admin sign in successful");
             await fetchUserProfile(signInData.user.id);
             return { success: true };
           }
@@ -257,6 +263,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: false, error: "Login failed" };
     } catch (error: any) {
+      console.error("❌ Admin creation failed:", error);
       return { success: false, error: error.message || "Admin creation failed" };
     }
   };

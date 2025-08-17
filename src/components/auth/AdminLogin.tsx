@@ -30,15 +30,25 @@ const AdminLogin: React.FC = () => {
     console.log("Attempting login with:", { email: loginEmail, password: "***" });
     
     // Show loading state
-    setError("Connecting to database...");
+    setError("Signing in...");
     
     const result = await signIn(loginEmail, loginPassword);
 
     if (!result.success) {
-      setError(result.error || "Login failed");
+      console.error("Login failed:", result.error);
+      setError(result.error || "Login failed. Please check your credentials.");
+    } else {
+      console.log("✅ Login successful!");
+      setError("");
     }
 
     setLoading(false);
+  };
+
+  // Auto-fill admin credentials for testing
+  const fillAdminCredentials = () => {
+    setEmail("admin@company.com");
+    setPassword("admin123456");
   };
 
   return (
@@ -64,7 +74,7 @@ const AdminLogin: React.FC = () => {
             <p className="text-acid-yellow text-sm mb-2">Quick Admin Login:</p>
             <button
               type="button"
-              onClick={() => { setEmail("admin@company.com"); setPassword("admin123456"); }}
+              onClick={fillAdminCredentials}
               className="text-acid-yellow hover:text-white text-sm underline"
             >
               Use Default Admin Credentials
