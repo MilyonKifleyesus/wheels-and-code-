@@ -168,5 +168,3 @@ const ServicesPreview: React.FC = () => {
     </section>
   );
 };
-
-export default HeroSection;
