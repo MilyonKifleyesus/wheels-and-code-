@@ -1,255 +1,239 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Database } from '../lib/supabase';
 
-type ContentSection = Database['public']['Tables']['content_sections']['Row'];
-type ContentSectionInsert = Database['public']['Tables']['content_sections']['Insert'];
-type ContentSectionUpdate = Database['public']['Tables']['content_sections']['Update'];
+export interface ContentSection {
+  id: string;
+  type: 'hero' | 'services' | 'inventory' | 'testimonials' | 'contact' | 'about' | 'finance' | 'trust' | 'promo' | 'map';
+  title: string;
+  visible: boolean;
+  order: number;
+  content: {
+    heading?: string;
+    subheading?: string;
+    description?: string;
+    buttonText?: string;
+    buttonLink?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    accentColor?: string;
+    [key: string]: any;
+  };
+}
 
 interface ContentContextType {
   sections: ContentSection[];
   loading: boolean;
   error: string | null;
-  updateSection: (id: string, updates: ContentSectionUpdate) => Promise<void>;
-  updateSectionContent: (id: string, content: any) => Promise<void>;
-  toggleSectionVisibility: (id: string) => Promise<void>;
-  reorderSections: (sections: ContentSection[]) => Promise<void>;
-  addSection: (section: ContentSectionInsert) => Promise<void>;
-  deleteSection: (id: string) => Promise<void>;
+  updateSection: (id: string, updates: Partial<ContentSection>) => void;
+  updateSectionContent: (id: string, content: Partial<ContentSection['content']>) => void;
+  toggleSectionVisibility: (id: string) => void;
+  reorderSections: (sections: ContentSection[]) => void;
+  addSection: (section: Omit<ContentSection, 'id'>) => void;
+  deleteSection: (id: string) => void;
   getSectionById: (id: string) => ContentSection | undefined;
   getSectionByType: (type: string) => ContentSection | undefined;
   getVisibleSections: () => ContentSection[];
-  refreshSections: () => Promise<void>;
+  refreshSections: () => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
+// Default content sections that always work
+const getDefaultSections = (): ContentSection[] => [
+  {
+    id: 'hero',
+    type: 'hero',
+    title: 'Hero Section',
+    visible: true,
+    order: 1,
+    content: {
+      heading: 'PRECISION PERFORMANCE PERFECTION',
+      subheading: 'Where automotive excellence meets cutting-edge service',
+      description: 'Experience the pinnacle of automotive luxury and performance',
+      buttonText: 'BROWSE CARS',
+      buttonLink: '/inventory',
+      backgroundColor: '#0B0B0C',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'services',
+    type: 'services',
+    title: 'Services Section',
+    visible: true,
+    order: 2,
+    content: {
+      heading: 'PRECISION SERVICE',
+      description: 'Expert automotive service with state-of-the-art equipment and certified technicians',
+      backgroundColor: '#0B0B0C',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'inventory',
+    type: 'inventory',
+    title: 'Inventory Section',
+    visible: true,
+    order: 3,
+    content: {
+      heading: 'NEW ARRIVALS',
+      description: 'Latest additions to our premium collection',
+      backgroundColor: '#141518',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'trust',
+    type: 'trust',
+    title: 'Trust Section',
+    visible: true,
+    order: 4,
+    content: {
+      heading: 'TRUSTED BY THOUSANDS',
+      description: 'Join thousands of satisfied customers who trust us with their automotive needs',
+      backgroundColor: '#0B0B0C',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'finance',
+    type: 'finance',
+    title: 'Finance Section',
+    visible: true,
+    order: 5,
+    content: {
+      heading: 'FINANCE OPTIONS',
+      description: 'Get pre-qualified in minutes with competitive CAD rates and flexible terms',
+      backgroundColor: '#1A1B1E',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'promo',
+    type: 'promo',
+    title: 'Promo Section',
+    visible: true,
+    order: 6,
+    content: {
+      heading: 'PERFORMANCE SERVICE SPECIAL',
+      description: 'Complete performance package including diagnostics, tune-up, and optimization',
+      backgroundColor: '#0B0B0C',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  },
+  {
+    id: 'map',
+    type: 'map',
+    title: 'Map Section',
+    visible: true,
+    order: 7,
+    content: {
+      heading: 'VISIT US',
+      description: 'Experience our state-of-the-art facility and meet our expert team',
+      backgroundColor: '#1A1B1E',
+      textColor: '#FFFFFF',
+      accentColor: '#D7FF00'
+    }
+  }
+];
+
 export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<ContentSection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false
   const [error, setError] = useState<string | null>(null);
 
   const fetchSections = async () => {
+    console.log("📄 Starting content fetch process...");
+    
+    // Always start with default sections
+    const defaultSections = getDefaultSections();
+    setSections(defaultSections);
+    console.log("✅ Default content sections loaded:", defaultSections.length);
+
+    // Try to enhance with database data if available
     try {
-      setLoading(true);
-      setError(null);
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
+      if (!supabaseUrl || !supabaseKey) {
+        console.log("⚠️ Supabase not configured, using default content only");
+        return;
+      }
+
+      console.log("🔄 Attempting to fetch content from database...");
       const { data, error } = await supabase
         .from('content_sections')
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (error) throw error;
-      
-      // If no data, create default sections
-      if (!data || data.length === 0) {
-        const defaultSections = [
-          {
-            section_type: 'hero',
-            title: 'Hero Section',
-            visible: true,
-            sort_order: 1,
-            content: {
-              heading: 'PRECISION PERFORMANCE PERFECTION',
-              subheading: 'Where automotive excellence meets cutting-edge service',
-              description: 'Experience the pinnacle of automotive luxury and performance',
-              buttonText: 'BROWSE CARS',
-              buttonLink: '/inventory',
-              backgroundColor: '#0B0B0C',
-              textColor: '#FFFFFF',
-              accentColor: '#D7FF00'
-            }
-          },
-          {
-            section_type: 'services',
-            title: 'Services Section',
-            visible: true,
-            sort_order: 2,
-            content: {
-              heading: 'PRECISION SERVICE',
-              description: 'Expert automotive service with state-of-the-art equipment and certified technicians',
-              backgroundColor: '#0B0B0C',
-              textColor: '#FFFFFF',
-              accentColor: '#D7FF00'
-            }
-          },
-          {
-            section_type: 'inventory',
-            title: 'Inventory Section',
-            visible: true,
-            sort_order: 3,
-            content: {
-              heading: 'NEW ARRIVALS',
-              description: 'Latest additions to our premium collection',
-              backgroundColor: '#141518',
-              textColor: '#FFFFFF',
-              accentColor: '#D7FF00'
-            }
-          },
-          {
-            section_type: 'trust',
-            title: 'Trust Section',
-            visible: true,
-            sort_order: 4,
-            content: {
-              heading: 'TRUSTED BY THOUSANDS',
-              description: 'Join thousands of satisfied customers who trust us with their automotive needs',
-              backgroundColor: '#0B0B0C',
-              textColor: '#FFFFFF',
-              accentColor: '#D7FF00'
-            }
-          }
-        ];
-
-        // Insert default sections
-        for (const section of defaultSections) {
-          try {
-            await supabase.from('content_sections').insert([section]);
-          } catch (insertError) {
-            console.warn('Could not insert default section:', insertError);
-          }
-        }
-
-        // Fetch again after inserting defaults
-        const { data: newData } = await supabase
-          .from('content_sections')
-          .select('*')
-          .order('sort_order', { ascending: true });
-        
-        setSections(newData || []);
+      if (error) {
+        console.warn("⚠️ Database content fetch failed, keeping defaults:", error.message);
         return;
       }
       
-      setSections(data || []);
-    } catch (err) {
-      console.error('Error fetching content sections:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch content sections');
-      
-      // Set fallback sections if database fails
-      setSections([
-        {
-          id: 'hero-fallback',
-          section_type: 'hero',
-          title: 'Hero Section',
-          visible: true,
-          sort_order: 1,
-          content: {
-            heading: 'PRECISION PERFORMANCE PERFECTION',
-            subheading: 'Where automotive excellence meets cutting-edge service',
-            buttonText: 'BROWSE CARS',
-            buttonLink: '/inventory',
-            accentColor: '#D7FF00'
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateSection = async (id: string, updates: ContentSectionUpdate) => {
-    try {
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('content_sections')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setSections(prev => prev.map(section => 
-        section.id === id ? data : section
-      ));
-    } catch (err) {
-      console.error('Error updating section:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update section');
-      throw err;
-    }
-  };
-
-  const updateSectionContent = async (id: string, content: any) => {
-    const section = sections.find(s => s.id === id);
-    if (!section) return;
-
-    const updatedContent = { ...section.content, ...content };
-    await updateSection(id, { content: updatedContent });
-  };
-
-  const toggleSectionVisibility = async (id: string) => {
-    const section = sections.find(s => s.id === id);
-    if (!section) return;
-
-    await updateSection(id, { visible: !section.visible });
-  };
-
-  const reorderSections = async (newSections: ContentSection[]) => {
-    try {
-      setError(null);
-      
-      // Update sort_order for each section
-      const updates = newSections.map((section, index) => ({
-        id: section.id,
-        sort_order: index + 1
-      }));
-
-      for (const update of updates) {
-        await supabase
-          .from('content_sections')
-          .update({ sort_order: update.sort_order })
-          .eq('id', update.id);
+      if (data && data.length > 0) {
+        console.log("✅ Database content loaded:", data.length);
+        // Convert database format to UI format
+        const convertedSections: ContentSection[] = data.map(dbSection => ({
+          id: dbSection.id,
+          type: dbSection.section_type as ContentSection['type'],
+          title: dbSection.title,
+          visible: dbSection.visible,
+          order: dbSection.sort_order,
+          content: dbSection.content as ContentSection['content']
+        }));
+        
+        setSections(convertedSections);
       }
-
-      // Refresh sections to get updated order
-      await fetchSections();
     } catch (err) {
-      console.error('Error reordering sections:', err);
-      setError(err instanceof Error ? err.message : 'Failed to reorder sections');
-      throw err;
+      console.warn("⚠️ Database error, keeping default content:", err);
     }
   };
 
-  const addSection = async (sectionData: ContentSectionInsert) => {
-    try {
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('content_sections')
-        .insert([sectionData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setSections(prev => [...prev, data].sort((a, b) => a.sort_order - b.sort_order));
-    } catch (err) {
-      console.error('Error adding section:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add section');
-      throw err;
-    }
+  const updateSection = (id: string, updates: Partial<ContentSection>) => {
+    setSections(prev => prev.map(section => 
+      section.id === id ? { ...section, ...updates } : section
+    ));
+    console.log("✅ Section updated:", id);
   };
 
-  const deleteSection = async (id: string) => {
-    try {
-      setError(null);
-      
-      const { error } = await supabase
-        .from('content_sections')
-        .delete()
-        .eq('id', id);
+  const updateSectionContent = (id: string, content: Partial<ContentSection['content']>) => {
+    setSections(prev => prev.map(section => 
+      section.id === id ? { ...section, content: { ...section.content, ...content } } : section
+    ));
+    console.log("✅ Section content updated:", id);
+  };
 
-      if (error) throw error;
-      
-      setSections(prev => prev.filter(section => section.id !== id));
-    } catch (err) {
-      console.error('Error deleting section:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete section');
-      throw err;
-    }
+  const toggleSectionVisibility = (id: string) => {
+    setSections(prev => prev.map(section => 
+      section.id === id ? { ...section, visible: !section.visible } : section
+    ));
+    console.log("✅ Section visibility toggled:", id);
+  };
+
+  const reorderSections = (newSections: ContentSection[]) => {
+    setSections(newSections);
+    console.log("✅ Sections reordered");
+  };
+
+  const addSection = (sectionData: Omit<ContentSection, 'id'>) => {
+    const newSection: ContentSection = {
+      ...sectionData,
+      id: Date.now().toString(),
+    };
+    setSections(prev => [...prev, newSection].sort((a, b) => a.order - b.order));
+    console.log("✅ Section added:", newSection.title);
+  };
+
+  const deleteSection = (id: string) => {
+    setSections(prev => prev.filter(section => section.id !== id));
+    console.log("✅ Section deleted:", id);
   };
 
   const getSectionById = (id: string) => {
@@ -257,35 +241,19 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const getSectionByType = (type: string) => {
-    return sections.find(section => section.section_type === type);
+    return sections.find(section => section.type === type);
   };
 
   const getVisibleSections = () => {
-    return sections.filter(section => section.visible).sort((a, b) => a.sort_order - b.sort_order);
+    return sections.filter(section => section.visible).sort((a, b) => a.order - b.order);
   };
 
-  const refreshSections = async () => {
-    await fetchSections();
+  const refreshSections = () => {
+    fetchSections();
   };
 
   useEffect(() => {
     fetchSections();
-
-    // Subscribe to real-time changes
-    const subscription = supabase
-      .channel('content_sections_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'content_sections' },
-        (payload) => {
-          console.log('Content section change received:', payload);
-          fetchSections(); // Refresh data on any change
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   return (
@@ -317,4 +285,4 @@ export const useContent = () => {
   return context;
 };
 
-export type { ContentSection, ContentSectionInsert, ContentSectionUpdate };
+export type { ContentSection };

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@company.com"); // Pre-fill admin email
+  const [password, setPassword] = useState("admin123456"); // Pre-fill admin password
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const { signIn } = useAuth();
 
@@ -16,39 +16,71 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
-    // Use current form values or default admin credentials
-    const loginEmail = email || "admin@company.com";
-    const loginPassword = password || "admin123456";
+    setSuccess("");
 
-    if (!loginEmail || !loginPassword) {
+    console.log("🔐 Admin login attempt starting...");
+    console.log("📧 Email:", email);
+    console.log("🔑 Password:", password ? "***provided***" : "***missing***");
+
+    if (!email || !password) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
     }
 
-    console.log("Attempting login with:", { email: loginEmail, password: "***" });
-    
-    setError("Connecting to database and signing in...");
-    
-    const result = await signIn(loginEmail, loginPassword);
+    try {
+      setSuccess("Connecting to admin system...");
+      
+      const result = await signIn(email, password);
 
-    if (!result.success) {
-      console.error("Login failed:", result.error);
-      setError(result.error || "Login failed. Please check your credentials.");
-    } else {
-      console.log("✅ Login successful!");
-      setError("");
+      if (result.success) {
+        console.log("✅ Admin login successful!");
+        setSuccess("Login successful! Redirecting to admin dashboard...");
+        setError("");
+        
+        // Small delay to show success message
+        setTimeout(() => {
+          window.location.reload(); // Force refresh to ensure admin state is properly set
+        }, 1000);
+      } else {
+        console.error("❌ Admin login failed:", result.error);
+        setError(result.error || "Login failed. Please try again.");
+        setSuccess("");
+      }
+    } catch (error: any) {
+      console.error("❌ Login error:", error);
+      setError("Login system error. Please try again.");
+      setSuccess("");
     }
 
     setLoading(false);
   };
 
-  // Auto-fill admin credentials for testing
   const fillAdminCredentials = () => {
     setEmail("admin@company.com");
     setPassword("admin123456");
-    setError(""); // Clear any existing errors
+    setError("");
+    setSuccess("Admin credentials filled. Click 'Sign In' to continue.");
+  };
+
+  const testConnection = async () => {
+    setSuccess("Testing database connection...");
+    
+    try {
+      // Test basic connection
+      const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+      
+      if (error) {
+        setError(`Database connection failed: ${error.message}`);
+        setSuccess("");
+      } else {
+        setSuccess(`Database connection successful! Found ${data} profiles.`);
+        setError("");
+      }
+    } catch (err: any) {
+      setError(`Connection test failed: ${err.message}`);
+      setSuccess("");
+    }
   };
 
   return (
@@ -63,29 +95,43 @@ const AdminLogin: React.FC = () => {
             ADMIN ACCESS
           </h2>
           <p className="mt-2 text-gray-400 text-sm">
-            Secure Business Control Panel
+            Business Management System
           </p>
         </div>
 
         {/* Login Form */}
         <div className="bg-dark-graphite border border-gray-800 rounded-lg p-8 shadow-2xl">
-          {/* Quick Login Button */}
-          <div className="mb-6 p-4 bg-acid-yellow/10 border border-acid-yellow/20 rounded-lg">
-            <p className="text-acid-yellow text-sm mb-2">Quick Admin Login:</p>
+          {/* Quick Actions */}
+          <div className="mb-6 space-y-3">
             <button
               type="button"
               onClick={fillAdminCredentials}
-              className="text-acid-yellow hover:text-white text-sm underline"
+              className="w-full bg-acid-yellow/10 border border-acid-yellow/20 text-acid-yellow py-2 px-4 rounded-sm text-sm font-medium hover:bg-acid-yellow/20 transition-colors duration-300"
             >
               Use Default Admin Credentials
+            </button>
+            
+            <button
+              type="button"
+              onClick={testConnection}
+              className="w-full bg-blue-600/10 border border-blue-600/20 text-blue-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-blue-600/20 transition-colors duration-300"
+            >
+              Test Database Connection
             </button>
           </div>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4 flex items-center space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-400" />
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
                 <span className="text-red-400 text-sm">{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 flex items-center space-x-3">
+                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                <span className="text-green-400 text-sm">{success}</span>
               </div>
             )}
 
@@ -102,7 +148,6 @@ const AdminLogin: React.FC = () => {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200"
@@ -124,11 +169,10 @@ const AdminLogin: React.FC = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 pr-12"
-                  placeholder="••••••••"
+                  placeholder="admin123456"
                 />
                 <button
                   type="button"
@@ -153,7 +197,7 @@ const AdminLogin: React.FC = () => {
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
-                  <span>Authenticating...</span>
+                  <span>Signing In...</span>
                 </div>
               ) : (
                 "Sign In to Admin Panel"
@@ -161,43 +205,13 @@ const AdminLogin: React.FC = () => {
             </button>
           </form>
 
-          {/* Setup Instructions */}
-          <div className="mt-6">
-            <button
-              onClick={() => setShowInstructions(!showInstructions)}
-              className="text-acid-yellow hover:text-white text-sm underline"
-            >
-              Need help setting up? Click here
-            </button>
-            
-            {showInstructions && (
-              <div className="mt-4 p-4 bg-matte-black/50 border border-gray-700 rounded-lg text-xs text-gray-400">
-                <p className="font-medium text-gray-300 mb-2">Setup Instructions:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Create a .env file in your project root</li>
-                  <li>Add your Supabase URL and anon key</li>
-                  <li>Run the database migrations</li>
-                  <li>Use admin@company.com / admin123456 to login</li>
-                </ol>
-              </div>
-            )}
-          </div>
-
-          {/* Security Notice */}
+          {/* Debug Info */}
           <div className="mt-6 p-4 bg-matte-black/50 border border-gray-700 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-acid-yellow rounded-full mt-2"></div>
-              </div>
-              <div className="text-xs text-gray-400">
-                <p className="font-medium text-gray-300 mb-1">
-                  Security Notice
-                </p>
-                <p>
-                  This panel is restricted to authorized personnel only. All
-                  access attempts are logged and monitored.
-                </p>
-              </div>
+            <h4 className="text-gray-300 font-medium text-sm mb-2">Default Credentials:</h4>
+            <div className="text-xs text-gray-400 space-y-1">
+              <p><strong>Email:</strong> admin@company.com</p>
+              <p><strong>Password:</strong> admin123456</p>
+              <p className="text-acid-yellow mt-2">These credentials are pre-filled for testing</p>
             </div>
           </div>
         </div>
@@ -205,7 +219,7 @@ const AdminLogin: React.FC = () => {
         {/* Footer */}
         <div className="text-center">
           <p className="text-gray-500 text-xs">
-            © 2024 Car Sales & Repair. Secure Business Management System.
+            © 2024 Apex Auto Sales & Repair. Secure Admin System.
           </p>
         </div>
       </div>
