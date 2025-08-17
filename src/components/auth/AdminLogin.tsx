@@ -29,8 +29,7 @@ const AdminLogin: React.FC = () => {
 
     console.log("Attempting login with:", { email: loginEmail, password: "***" });
     
-    // Show loading state
-    setError("Signing in...");
+    setError("Connecting to database and signing in...");
     
     const result = await signIn(loginEmail, loginPassword);
 
@@ -49,6 +48,7 @@ const AdminLogin: React.FC = () => {
   const fillAdminCredentials = () => {
     setEmail("admin@company.com");
     setPassword("admin123456");
+    setError(""); // Clear any existing errors
   };
 
   return (

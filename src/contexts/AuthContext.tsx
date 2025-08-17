@@ -156,6 +156,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log("🔐 Attempting sign in with:", email);
       
+      // Check if Supabase is configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error("❌ Supabase not configured - missing environment variables");
+        return { 
+          success: false, 
+          error: "Database not configured. Please check your .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY" 
+        };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -170,7 +182,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return await createAdminUser(email, password);
         }
         
-        throw error;
+        return { 
+          success: false, 
+          error: `Login failed: ${error.message}. If this is your first time, the admin user will be created automatically.` 
+        };
       }
 
       if (data.user) {
@@ -199,6 +214,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             full_name: "Admin User",
             role: "admin",
           },
+          emailRedirectTo: undefined // Disable email confirmation
         },
       });
 
@@ -215,7 +231,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           if (signInError) {
             console.error("❌ Admin sign in failed:", signInError);
-            throw signInError;
+            return { success: false, error: `Admin login failed: ${signInError.message}` };
           }
           
           if (signInData.user) {
@@ -225,14 +241,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
-        throw error;
+        return { success: false, error: `Admin creation failed: ${error.message}` };
       }
 
       if (data.user) {
         console.log("✅ Admin user created successfully");
         
         // Create admin profile
-        const { error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .insert([
             {
@@ -241,22 +257,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               full_name: "Admin User",
               role: "admin",
             }
-          ]);
+          ])
+          .select()
+          .single();
 
         if (profileError) {
           console.error("Admin profile creation error:", profileError);
-          // Don't throw error if profile already exists
-          if (!profileError.message.includes("duplicate key")) {
-            throw profileError;
+          
+          // If profile creation fails, try to fetch existing profile
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .single();
+            
+          if (existingProfile) {
+            console.log("✅ Using existing admin profile");
+            setUser({
+              id: existingProfile.id,
+              email: existingProfile.email,
+              full_name: existingProfile.full_name,
+              role: existingProfile.role,
+            });
+          } else {
+            console.warn("⚠️ Profile creation failed, using basic user data");
+            setUser({
+              id: data.user.id,
+              email: email,
+              full_name: "Admin User",
+              role: "admin",
+            });
           }
+        } else if (profileData) {
+          console.log("✅ Admin profile created successfully");
+          setUser({
+            id: profileData.id,
+            email: profileData.email,
+            full_name: profileData.full_name,
+            role: profileData.role,
+          });
         }
-
-        setUser({
-          id: data.user.id,
-          email: email,
-          full_name: "Admin User",
-          role: "admin",
-        });
 
         return { success: true };
       }

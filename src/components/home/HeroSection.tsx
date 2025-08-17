@@ -11,28 +11,7 @@ const HeroSection: React.FC = () => {
   
   const heroContent = getSectionByType('hero');
   
-  // Show loading state while content is loading
-  if (loading) {
-    return (
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite"></div>
-        <div className="relative z-10 text-center">
-          <div className="animate-pulse">
-            <div className="h-16 bg-gray-700 rounded mb-4 w-96 mx-auto"></div>
-            <div className="h-8 bg-gray-700 rounded mb-8 w-64 mx-auto"></div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-  
-  // Always show hero section - it's critical for homepage
-  // Only hide if explicitly set to hidden AND we have content
-  if (heroContent && heroContent.visible === false) {
-    return null;
-  }
-
-  // Fallback content if no hero content exists
+  // Always show hero section with fallback content
   const content = heroContent?.content || {
     heading: 'PRECISION PERFORMANCE PERFECTION',
     subheading: 'Where automotive excellence meets cutting-edge service',

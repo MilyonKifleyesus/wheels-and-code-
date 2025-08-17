@@ -18,31 +18,7 @@ const ServicesPreview: React.FC = () => {
   
   const servicesContent = getSectionByType('services');
   
-  // Show loading state
-  if (loading) {
-    return (
-      <section className="py-16 bg-matte-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded mb-4 w-64 mx-auto"></div>
-            <div className="h-4 bg-gray-700 rounded mb-8 w-96 mx-auto"></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-gray-700 rounded-lg h-64"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-  
-  // Always show services section unless explicitly hidden
-  if (servicesContent && servicesContent.visible === false) {
-    return null;
-  }
-
-  // Fallback content
+  // Always show services section with fallback content
   const content = servicesContent?.content || {
     heading: 'PRECISION SERVICE',
     description: 'Expert automotive service with state-of-the-art equipment and certified technicians'

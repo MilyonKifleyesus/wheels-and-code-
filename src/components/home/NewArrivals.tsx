@@ -12,31 +12,7 @@ const NewArrivals: React.FC = () => {
   
   const inventoryContent = getSectionByType('inventory');
   
-  // Show loading state
-  if (loading) {
-    return (
-      <section className="py-16 bg-carbon-gray">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded mb-4 w-64"></div>
-            <div className="h-4 bg-gray-700 rounded mb-8 w-96"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-700 rounded-lg h-96"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-  
-  // Always show inventory section unless explicitly hidden
-  if (inventoryContent && inventoryContent.visible === false) {
-    return null;
-  }
-
-  // Fallback content
+  // Always show inventory section with fallback content
   const content = inventoryContent?.content || {
     heading: 'NEW ARRIVALS',
     description: 'Latest additions to our premium collection'
