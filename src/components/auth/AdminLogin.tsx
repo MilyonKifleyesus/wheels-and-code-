@@ -8,6 +8,7 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const { signIn } = useAuth();
 
@@ -15,6 +16,12 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    
+    // Pre-fill admin credentials for testing
+    if (!email && !password) {
+      setEmail("admin@company.com");
+      setPassword("admin123456");
+    }
 
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -22,6 +29,11 @@ const AdminLogin: React.FC = () => {
       return;
     }
 
+    console.log("Attempting login with:", { email, password: "***" });
+    
+    // Show loading state
+    setError("Connecting to database...");
+    
     const result = await signIn(email, password);
 
     if (!result.success) {
@@ -49,6 +61,18 @@ const AdminLogin: React.FC = () => {
 
         {/* Login Form */}
         <div className="bg-dark-graphite border border-gray-800 rounded-lg p-8 shadow-2xl">
+          {/* Quick Login Button */}
+          <div className="mb-6 p-4 bg-acid-yellow/10 border border-acid-yellow/20 rounded-lg">
+            <p className="text-acid-yellow text-sm mb-2">Quick Admin Login:</p>
+            <button
+              type="button"
+              onClick={() => { setEmail("admin@company.com"); setPassword("admin123456"); }}
+              className="text-acid-yellow hover:text-white text-sm underline"
+            >
+              Use Default Admin Credentials
+            </button>
+          </div>
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4 flex items-center space-x-3">
@@ -128,6 +152,28 @@ const AdminLogin: React.FC = () => {
               )}
             </button>
           </form>
+
+          {/* Setup Instructions */}
+          <div className="mt-6">
+            <button
+              onClick={() => setShowInstructions(!showInstructions)}
+              className="text-acid-yellow hover:text-white text-sm underline"
+            >
+              Need help setting up? Click here
+            </button>
+            
+            {showInstructions && (
+              <div className="mt-4 p-4 bg-matte-black/50 border border-gray-700 rounded-lg text-xs text-gray-400">
+                <p className="font-medium text-gray-300 mb-2">Setup Instructions:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Create a .env file in your project root</li>
+                  <li>Add your Supabase URL and anon key</li>
+                  <li>Run the database migrations</li>
+                  <li>Use admin@company.com / admin123456 to login</li>
+                </ol>
+              </div>
+            )}
+          </div>
 
           {/* Security Notice */}
           <div className="mt-6 p-4 bg-matte-black/50 border border-gray-700 rounded-lg">

@@ -3,6 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Log environment variables for debugging
+console.log("Supabase URL:", supabaseUrl);
+console.log("Supabase Key:", supabaseAnonKey ? "Present" : "Missing");
+console.log("Environment:", import.meta.env.MODE);
+
 // Enhanced environment variable validation
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables:");
@@ -11,6 +16,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
     "VITE_SUPABASE_ANON_KEY:",
     supabaseAnonKey ? "✓ Set" : "✗ Missing"
   );
+  
+  // Show instructions for setting up environment variables
+  console.error("\n🔧 Setup Instructions:");
+  console.error("1. Create a .env file in your project root");
+  console.error("2. Add your Supabase credentials:");
+  console.error("   VITE_SUPABASE_URL=https://your-project-id.supabase.co");
+  console.error("   VITE_SUPABASE_ANON_KEY=your-anon-key-here");
+  
   throw new Error(
     "Missing Supabase environment variables. Please check your .env file."
   );
@@ -18,6 +31,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Validate URL format
 if (
+  supabaseUrl &&
   !supabaseUrl.startsWith("https://") ||
   !supabaseUrl.includes(".supabase.co")
 ) {
@@ -28,6 +42,7 @@ if (
 }
 
 // Validate key format (basic check)
+if (supabaseAnonKey &&
 if (supabaseAnonKey.length < 50) {
   console.error("Supabase anon key appears to be invalid (too short)");
   throw new Error("Invalid Supabase anon key format");
@@ -50,13 +65,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Test the connection
-supabase.auth.getSession().then(({ error }) => {
-  if (error) {
-    console.error("Supabase connection test failed:", error);
-  } else {
-    console.log("Supabase connection test successful");
-  }
-});
+if (supabaseUrl && supabaseAnonKey) {
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error("Supabase connection test failed:", error);
+    } else {
+      console.log("Supabase connection test successful");
+      console.log("Current session:", data.session ? "Active" : "None");
+    }
+  });
+} else {
+  console.warn("Skipping connection test due to missing credentials");
+}
 
 // Database types
 export interface Database {

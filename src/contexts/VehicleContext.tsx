@@ -42,6 +42,13 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
         throw new Error("Supabase client not initialized");
       }
 
+      // Add some sample data if no vehicles exist
+      const { count } = await supabase
+        .from("vehicles")
+        .select("*", { count: 'exact', head: true });
+
+      if (count === 0) {
+
       const { data, error } = await supabase
         .from("vehicles")
         .select("*")
@@ -50,6 +57,52 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
       if (error) {
         console.error("Supabase error:", error);
         throw error;
+      }
+
+        // If no data, add sample vehicles
+        if (!data || data.length === 0) {
+          const sampleVehicles = [
+            {
+              make: 'BMW',
+              model: 'M3',
+              year: 2022,
+              price: 85000,
+              mileage: 15000,
+              status: 'available',
+              images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
+              specs: { hp: 473, torque: 600, acceleration: '4.1s' },
+              features: ['Premium Sound', 'Navigation', 'Heated Seats']
+            },
+            {
+              make: 'Mercedes',
+              model: 'C63 AMG',
+              year: 2021,
+              price: 92000,
+              mileage: 8500,
+              status: 'available',
+              images: ['https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800'],
+              specs: { hp: 503, torque: 700, acceleration: '3.9s' },
+              features: ['AMG Performance', 'Premium Interior', 'Sport Exhaust']
+            }
+          ];
+
+          for (const vehicle of sampleVehicles) {
+            try {
+              await supabase.from("vehicles").insert([vehicle]);
+            } catch (insertError) {
+              console.warn("Could not insert sample vehicle:", insertError);
+            }
+          }
+
+          // Fetch again after inserting samples
+          const { data: newData } = await supabase
+            .from("vehicles")
+            .select("*")
+            .order("created_at", { ascending: false });
+          
+          setVehicles(newData || []);
+          return;
+        }
       }
 
       setVehicles(data || []);
