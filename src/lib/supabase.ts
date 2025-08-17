@@ -43,6 +43,7 @@ if (
 
 // Validate key format (basic check)
 if (supabaseAnonKey &&
+)
 if (supabaseAnonKey.length < 50) {
   console.error("Supabase anon key appears to be invalid (too short)");
   throw new Error("Invalid Supabase anon key format");
