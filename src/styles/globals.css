@@ -1,0 +1,318 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables */
+:root {
+  --matte-black: #0B0B0C;
+  --carbon-gray: #141518;
+  --dark-graphite: #1A1B1E;
+  --acid-yellow: #D7FF00;
+  --neon-lime: #C8FF1A;
+  --soft-white: #F2F4F5;
+}
+
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--matte-black);
+  color: white;
+  overflow-x: hidden;
+}
+
+/* Custom Utilities */
+.matte-black {
+  background-color: var(--matte-black);
+}
+
+.carbon-gray {
+  background-color: var(--carbon-gray);
+}
+
+.dark-graphite {
+  background-color: var(--dark-graphite);
+}
+
+.acid-yellow {
+  color: var(--acid-yellow);
+}
+
+.neon-lime {
+  color: var(--neon-lime);
+}
+
+.bg-matte-black {
+  background-color: var(--matte-black);
+}
+
+.bg-carbon-gray {
+  background-color: var(--carbon-gray);
+}
+
+.bg-dark-graphite {
+  background-color: var(--dark-graphite);
+}
+
+.bg-acid-yellow {
+  background-color: var(--acid-yellow);
+}
+
+.bg-neon-lime {
+  background-color: var(--neon-lime);
+}
+
+.text-acid-yellow {
+  color: var(--acid-yellow);
+}
+
+.text-neon-lime {
+  color: var(--neon-lime);
+}
+
+.border-acid-yellow {
+  border-color: var(--acid-yellow);
+}
+
+.border-neon-lime {
+  border-color: var(--neon-lime);
+}
+
+/* Scrollbar Styles */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar for other elements */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--carbon-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dark-graphite);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--acid-yellow);
+}
+
+/* Animations */
+@keyframes grid-flow {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(-50px) translateY(-50px);
+  }
+}
+
+.animate-grid-flow {
+  animation: grid-flow 20s linear infinite;
+}
+
+/* Grid Pattern */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(215, 255, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(215, 255, 0, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Focus Styles */
+.focus-visible {
+  outline: 2px solid var(--acid-yellow);
+  outline-offset: 2px;
+}
+
+/* Button Hover Effects */
+.btn-magnetic {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-magnetic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(215, 255, 0, 0.2);
+}
+
+/* Card Hover Effects */
+.card-hover {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* Text Selection */
+::selection {
+  background-color: var(--acid-yellow);
+  color: black;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-spin,
+  .animate-bounce,
+  .animate-pulse,
+  .animate-grid-flow {
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --acid-yellow: #FFFF00;
+    --neon-lime: #00FF00;
+  }
+  
+  .bg-dark-graphite,
+  .bg-carbon-gray {
+    background-color: #000000;
+  }
+  
+  .border-gray-800,
+  .border-gray-700 {
+    border-color: #FFFFFF;
+  }
+}
+
+/* Print Styles */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Loading States */
+.loading-skeleton {
+  background: linear-gradient(90deg, var(--carbon-gray) 25%, var(--dark-graphite) 50%, var(--carbon-gray) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom Focus Rings */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: 2px solid var(--acid-yellow);
+  outline-offset: 2px;
+}
+
+/* Smooth Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mobile Touch Targets */
+@media (max-width: 768px) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Performance Optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Container Queries (for modern browsers) */
+@container (min-width: 768px) {
+  .container-md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Custom Easing Functions */
+.ease-out-quad {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.ease-out-quart {
+  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Magnetic Button Effect */
+.magnetic-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.magnetic-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(215, 255, 0, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.magnetic-btn:hover::before {
+  transform: translateX(100%);
+}
