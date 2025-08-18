@@ -13,7 +13,7 @@ export default {
         'acid-yellow': '#D7FF00',
         'neon-lime': '#C8FF1A',
         'soft-white': '#F2F4F5',
-        'electric-blue': '#00D4FF',
+        'electric-blue': '#39FF14',
         'neon-green': '#39FF14'
       },
       animation: {
