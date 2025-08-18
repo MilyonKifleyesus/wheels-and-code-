@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRef } from 'react';
 
 interface Spec {
   label: string;
@@ -10,6 +11,7 @@ interface Spec {
 const SpecTicker: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animatedValue, setAnimatedValue] = useState(0);
+  const mountedRef = useRef(true);
 
   const specs: Spec[] = [
     { label: '0-100 KM/H', value: 3.2, unit: 'SEC', duration: 2000 },
@@ -19,19 +21,29 @@ const SpecTicker: React.FC = () => {
   ];
 
   useEffect(() => {
+    mountedRef.current = true;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % specs.length);
+      if (mountedRef.current) {
+        setCurrentIndex((prev) => (prev + 1) % specs.length);
+      }
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
   }, [specs.length]);
 
   useEffect(() => {
+    if (!mountedRef.current) return;
+    
     setAnimatedValue(0);
     const currentSpec = specs[currentIndex];
     
     const startTime = Date.now();
     const animate = () => {
+      if (!mountedRef.current) return;
+      
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / currentSpec.duration, 1);
       
@@ -45,7 +57,9 @@ const SpecTicker: React.FC = () => {
     };
     
     const timer = setTimeout(() => {
-      requestAnimationFrame(animate);
+      if (mountedRef.current) {
+        requestAnimationFrame(animate);
+      }
     }, 200);
 
     return () => clearTimeout(timer);
