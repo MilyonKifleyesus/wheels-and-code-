@@ -45,6 +45,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
+        // Immediate fallback if no environment variables
+        if (!supabaseUrl || !supabaseKey) {
+          console.log("⚠️ Supabase environment variables not configured - skipping session check");
+          if (mounted) setLoading(false);
+          return;
+        }
         if (!supabaseUrl || !supabaseKey) {
           console.log("⚠️ Supabase environment variables not configured");
           if (mounted) {
@@ -53,6 +59,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return;
         }
         
+        // Skip session check if supabase client is not available
+        if (!supabase) {
+          console.log("⚠️ Supabase client not available - skipping session check");
+          if (mounted) setLoading(false);
+          return;
+        }
         if (!supabase) {
           console.log("⚠️ Supabase not configured, using mock auth");
           if (mounted) {
@@ -61,16 +73,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return;
         }
 
-        // Add timeout to prevent hanging
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 2000)
-        );
+        // Simple session check without timeout race condition
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        const { data: { session }, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as any;
+        if (!mounted) return; // Component unmounted, don't update state
         
         if (error) {
           console.error("❌ Session error:", error);
@@ -97,18 +103,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    // Immediate timeout to prevent hanging
-    const immediateTimeoutId = setTimeout(() => {
-      if (mounted) {
-        console.log("⏰ Auth immediate timeout - showing login form");
-        setLoading(false);
-      }
+    // Set a safety timeout to ensure loading state is cleared
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) setLoading(false);
     }, 1000);
 
-    getInitialSession().finally(() => {
-      clearTimeout(immediateTimeoutId);
-    });
-
+    getInitialSession().finally(() => clearTimeout(safetyTimeout));
     // Listen for auth changes
     let subscription: any = null;
     if (supabase) {
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       mounted = false;
-      clearTimeout(immediateTimeoutId);
+      clearTimeout(safetyTimeout);
       if (subscription) {
         subscription.unsubscribe();
       }
