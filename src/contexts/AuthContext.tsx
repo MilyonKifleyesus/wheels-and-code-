@@ -45,34 +45,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let authSubscription: any = null;
 
     const initializeAuth = async () => {
       try {
         console.log("🔐 Initializing authentication...");
         
+        // Always set loading to false if no supabase, but don't return early
+        // to ensure hooks are called consistently
         if (!supabase) {
           console.log("⚠️ Supabase not configured, skipping auth initialization");
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
-        
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("❌ Session check error:", error);
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (session?.user) {
-          console.log("✅ Found existing session for:", session.user.email);
-          await fetchUserProfile(session.user.id, session.user.email || '');
         } else {
-          console.log("ℹ️ No existing session found");
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("❌ Session check error:", error);
+          } else if (session?.user) {
+            console.log("✅ Found existing session for:", session.user.email);
+            await fetchUserProfile(session.user.id, session.user.email || '');
+          } else {
+            console.log("ℹ️ No existing session found");
+          }
         }
       } catch (error) {
         console.error("❌ Auth initialization error:", error);
@@ -83,15 +76,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    initializeAuth();
-
-    // Listen for auth changes only if supabase is available
-    let subscription: any = null;
-    
+    // Set up auth listener - always do this to maintain hook consistency
     if (supabase) {
       const {
-        data: { subscription: authSubscription },
+        data: { subscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+        
         console.log("🔄 Auth state changed:", event);
         
         if (event === 'SIGNED_IN' && session?.user) {
@@ -99,7 +90,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await fetchUserProfile(session.user.id, session.user.email || '');
         } else if (event === 'SIGNED_OUT') {
           console.log("👋 User signed out");
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         }
         
         if (mounted) {
@@ -107,18 +100,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       });
       
-      subscription = authSubscription;
+      authSubscription = subscription;
     }
+
+    // Initialize auth after setting up listener
+    initializeAuth();
 
     return () => {
       mounted = false;
-      if (subscription) {
-        subscription.unsubscribe();
+      if (authSubscription) {
+        authSubscription.unsubscribe();
       }
     };
   }, []);
 
   const fetchUserProfile = async (userId: string, email: string) => {
+    // Early return if component unmounted or no supabase
     if (!supabase) {
       console.warn("⚠️ Supabase not available for profile fetch");
       return;
@@ -148,16 +145,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data) {
         console.log("✅ Profile loaded successfully:", data.email, data.role);
-        setUser({
+        // Only update state if component is still mounted
+        setUser(prevUser => ({
           id: data.id,
           email: data.email,
           full_name: data.full_name,
           role: data.role,
-        });
+        }));
       }
     } catch (error) {
       console.error("❌ Profile fetch error:", error);
-      // Don't create fallback user - let the error be handled properly
       throw error;
     }
   };
@@ -190,12 +187,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log("✅ Profile created successfully:", data);
-      setUser({
+      // Only update state if component is still mounted
+      setUser(prevUser => ({
         id: data.id,
         email: data.email,
         full_name: data.full_name,
         role: data.role,
-      });
+      }));
     } catch (error) {
       console.error("❌ Profile creation error:", error);
       throw error;
@@ -209,7 +207,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     
     try {
-      setUser(null); // Clear any existing user state
+      // Clear any existing user state safely
+      setUser(prevUser => null);
       
       // First, try to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -219,7 +218,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (signInError) {
         console.log("⚠️ Sign in failed:", signInError.message);
-        setLoading(false);
         
         // If user doesn't exist and this is admin, try to create admin user
         if (email === "admin@company.com" && signInError.message.includes("Invalid login credentials")) {
@@ -239,7 +237,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (signUpError) {
             console.error("❌ Admin creation failed:", signUpError);
-            setLoading(false);
             return { success: false, error: `Failed to create admin user: ${signUpError.message}` };
           }
 
@@ -250,7 +247,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
-        setLoading(false);
         return { success: false, error: signInError.message };
       }
 
@@ -260,11 +256,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: true };
       }
 
-      setLoading(false);
       return { success: false, error: "Login failed - no user data returned" };
     } catch (error: any) {
       console.error("❌ Sign in error:", error);
-      setLoading(false);
       return { success: false, error: error.message || "Login failed" };
     }
   };
@@ -272,15 +266,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       console.log("👋 Signing out...");
-      setLoading(true);
       if (supabase) {
         await supabase.auth.signOut();
       }
-      setUser(null);
+      setUser(prevUser => null);
       console.log("✅ Sign out successful");
     } catch (error) {
       console.error("❌ Sign out error:", error);
-      setUser(null); // Force sign out locally
+      setUser(prevUser => null); // Force sign out locally
     }
   };
 
