@@ -1,290 +1,312 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useRef,
-} from "react";
-import { supabase } from "../lib/supabase";
-
-interface User {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: "customer" | "admin" | "staff";
-}
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signIn: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  signOut: () => Promise<void>;
-  isAdmin: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
-
-  // Safe state setter that checks if component is mounted
-  const safeSetUser = (userOrUpdater: User | null | ((prev: User | null) => User | null)) => {
-    if (mountedRef.current) {
-      setUser(userOrUpdater);
-    }
-  };
-
-  const safeSetLoading = (loadingState: boolean) => {
-    if (mountedRef.current) {
-      setLoading(loadingState);
-    }
-  };
-
-  useEffect(() => {
-    mountedRef.current = true;
-    let authSubscription: any = null;
-
-    const initializeAuth = async () => {
-      try {
-        console.log("🔐 Initializing authentication...");
-        
-        if (!supabase) {
-          console.log("⚠️ Supabase not configured, skipping auth initialization");
-          safeSetLoading(false);
-          return;
-        }
-
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("❌ Session check error:", error);
-        } else if (session?.user && mountedRef.current) {
-          console.log("✅ Found existing session for:", session.user.email);
-          await fetchUserProfile(session.user.id, session.user.email || '');
-        } else {
-          console.log("ℹ️ No existing session found");
-        }
-      } catch (error) {
-        console.error("❌ Auth initialization error:", error);
-      } finally {
-        safeSetLoading(false);
-      }
-    };
-
-    // Set up auth listener
-    if (supabase) {
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!mountedRef.current) return;
-        
-        console.log("🔄 Auth state changed:", event);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log("✅ User signed in:", session.user.email);
-          await fetchUserProfile(session.user.id, session.user.email || '');
-        } else if (event === 'SIGNED_OUT') {
-          console.log("👋 User signed out");
-          safeSetUser(null);
-        }
-        
-        safeSetLoading(false);
-      });
-      
-      authSubscription = subscription;
-    }
-
-    // Initialize auth
-    initializeAuth();
-
-    return () => {
-      mountedRef.current = false;
-      if (authSubscription?.unsubscribe) {
-        authSubscription.unsubscribe();
-      }
-    };
-  }, []);
-
-  const fetchUserProfile = async (userId: string, email: string) => {
-    if (!mountedRef.current || !supabase) {
-      return;
-    }
-    
-    try {
-      console.log("👤 Fetching profile for user:", userId);
-      
-      const { data, error } = await supabase
+      // Add timeout to profile fetch
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
-
-      if (error) {
-        console.warn("⚠️ Profile fetch failed:", error.message);
         
-        if (error.code === 'PGRST116' && mountedRef.current) {
-          console.log("🔄 Profile not found, creating new profile...");
-          await createUserProfile(userId, email);
-          return;
-        }
-        
-        throw error;
-      }
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+      );
+      
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+import SpecTicker from '../ui/SpecTicker';
 
-      if (data && mountedRef.current) {
-        console.log("✅ Profile loaded successfully:", data.email, data.role);
-        safeSetUser({
-          id: data.id,
-          email: data.email,
-          full_name: data.full_name,
-          role: data.role,
-        });
-      }
-    } catch (error) {
-      console.error("❌ Profile fetch error:", error);
-    }
+const HeroSection: React.FC = () => {
+  const { getSectionByType } = useContent();
+  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+        // Don't throw error, just continue without profile
+        console.warn("⚠️ Continuing without profile data");
+        return;
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const heroContent = getSectionByType('hero');
+  
+  // Always show hero section with fallback content
+  const content = heroContent?.content || {
+    heading: 'PRECISION PERFORMANCE PERFECTION',
+    subheading: 'Where automotive excellence meets cutting-edge service',
+    description: 'Experience the pinnacle of automotive luxury and performance',
+    buttonText: 'BROWSE CARS',
+    buttonLink: '/inventory',
+    backgroundColor: '#0B0B0C',
+    textColor: '#FFFFFF',
+      // Don't let profile errors block the auth flow
+      console.log("⚠️ Continuing without profile due to error");
+    accentColor: '#D7FF00'
   };
 
-  const createUserProfile = async (userId: string, email: string) => {
-    if (!mountedRef.current || !supabase) {
-      return;
-    }
-    
-    try {
-      console.log("👤 Creating user profile...");
+  useEffect(() => {
+    // Ensure component is marked as loaded
+    setIsLoaded(true);
+  }, []);
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+      <div className="absolute inset-0">
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+      <div className="absolute inset-0">
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
+      <div className="absolute inset-0">
+        <img
+          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          alt="Luxury automotive showroom"
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {/* Fallback gradient while image loads */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
+      </div>
       
-      const isAdmin = email === "admin@company.com";
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          email: email,
-          full_name: isAdmin ? "Admin User" : "User",
-          role: isAdmin ? "admin" : "customer",
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("❌ Profile creation failed:", error);
-        throw error;
-      }
-
-      if (data && mountedRef.current) {
-        console.log("✅ Profile created successfully:", data);
-        safeSetUser({
-          id: data.id,
-          email: data.email,
-          full_name: data.full_name,
-          role: data.role,
-        });
-      }
-    } catch (error) {
-      console.error("❌ Profile creation error:", error);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    if (!supabase) {
-      console.error("❌ Supabase not available for sign in");
-      return { success: false, error: "Database connection not available" };
-    }
-    
-    try {
-      console.log("🔐 Attempting sign in for:", email);
-      
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.log("⚠️ Sign in failed:", signInError.message);
-        
-        if (email === "admin@company.com" && signInError.message.includes("Invalid login credentials")) {
-          console.log("🔧 Admin user doesn't exist, creating...");
-          
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: undefined,
-              data: {
-                full_name: "Admin User",
-                role: "admin",
-              },
-            },
-          });
-
-          if (signUpError) {
-            console.error("❌ Admin creation failed:", signUpError);
-            return { success: false, error: `Failed to create admin user: ${signUpError.message}` };
+      {/* Animated Grid Pattern */}
           }
-
-          if (signUpData.user && mountedRef.current) {
-            console.log("✅ Admin user created, creating profile...");
-            await createUserProfile(signUpData.user.id, email);
-            return { success: true };
-          }
+        } catch (timeoutError) {
+          console.warn("⚠️ Session check timed out, continuing without session");
         }
-        
-        return { success: false, error: signInError.message };
-      }
+      <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
+          imageLoaded ? 'opacity-0' : 'opacity-100'
+        }`}></div>
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/60"></div>
+        {/* Bottom gradient for seamless transition */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent"></div>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-grid-pattern animate-grid-flow"></div>
+      </div>
 
-      if (signInData.user) {
-        console.log("✅ Sign in successful for:", signInData.user.email);
-        return { success: true };
-      }
+      {/* Floating Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-acid-yellow rounded-full animate-pulse"></div>
+        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-neon-lime rounded-full animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-acid-yellow rounded-full animate-pulse delay-2000"></div>
+      </div>
 
-      return { success: false, error: "Login failed - no user data returned" };
-    } catch (error: any) {
-      console.error("❌ Sign in error:", error);
-      return { success: false, error: error.message || "Login failed" };
-    }
-  };
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center min-h-screen py-20">
+          {/* Content Column */}
+          <div className="lg:col-span-2 order-2 lg:order-1 space-y-8">
+            <div className="space-y-6">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-none">
+                <span className="block text-white drop-shadow-2xl">PRECISION</span>
+                <span className="block text-acid-yellow drop-shadow-2xl animate-pulse">PERFORMANCE</span>
+                <span className="block text-white drop-shadow-2xl">PERFECTION</span>
+              </h1>
+              
+              <p className="text-xl sm:text-2xl text-gray-200 max-w-2xl font-light leading-relaxed drop-shadow-lg">
+                {content.subheading || 'Where automotive excellence meets cutting-edge service'}
+              </p>
+              
+              <p className="text-lg text-gray-300 max-w-xl drop-shadow-md">
+                {content.description || 'Experience the pinnacle of automotive luxury and performance'}
+              </p>
+            </div>
 
-  const signOut = async () => {
-    try {
-      console.log("👋 Signing out...");
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
-      safeSetUser(null);
-      console.log("✅ Sign out successful");
-    } catch (error) {
-      console.error("❌ Sign out error:", error);
-      safeSetUser(null);
-    }
-  };
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Link 
+                to={content.buttonLink || '/inventory'} 
+                className="group bg-acid-yellow text-black px-10 py-5 rounded-sm font-bold tracking-wider hover:bg-neon-lime transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-acid-yellow/25 hover:scale-105"
+              >
+                <span>{content.buttonText || 'BROWSE CARS'}</span>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+              </Link>
+              
+              <Link to="/book" className="group border-2 border-white/80 text-white px-10 py-5 rounded-sm font-bold tracking-wider hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center space-x-3 backdrop-blur-sm hover:scale-105">
+                <Play className="w-6 h-6" />
+                <span>BOOK SERVICE</span>
+              </Link>
+            </div>
 
-  const isAdmin = user?.role === "admin";
+            {/* Secondary Actions */}
+            <div className="flex flex-wrap gap-8 pt-6">
+              <a href="tel:+14169166475" className="text-gray-300 hover:text-acid-yellow transition-colors duration-300 flex items-center space-x-3 group">
+                <div className="p-2 bg-white/10 rounded-full group-hover:bg-acid-yellow/20 transition-colors duration-300">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-bold tracking-wider">CALL NOW</span>
+              </a>
+              <a href="https://maps.google.com/?q=179+Weston+Rd,+Toronto,+ON+M6N+3A5" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-acid-yellow transition-colors duration-300 text-sm font-bold tracking-wider">
+                GET DIRECTIONS
+              </a>
+            </div>
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    signIn,
-    signOut,
-    isAdmin,
-  };
+            {/* Featured Vehicle Info */}
+            {featuredVehicle && (
+              <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-6 max-w-md">
+                <h3 className="text-acid-yellow font-bold tracking-wider mb-2">FEATURED VEHICLE</h3>
+                <p className="text-white text-lg font-bold">
+                  {featuredVehicle.year} {featuredVehicle.make} {featuredVehicle.model}
+                </p>
+                <p className="text-gray-300 text-sm mb-3">
+                  {featuredVehicle.specs?.hp || 500} HP • {featuredVehicle.mileage.toLocaleString()} km
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-acid-yellow font-black text-xl">
+                    ${featuredVehicle.price.toLocaleString()} CAD
+                  </span>
+                  <Link 
+                    to={`/vehicle/${featuredVehicle.id}`}
+                    className="text-white hover:text-acid-yellow transition-colors duration-300 text-sm font-medium"
+                  >
+                    VIEW DETAILS →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+          {/* Stats Column */}
+          <div className="order-1 lg:order-2 flex flex-col items-center justify-center space-y-8">
+            <SpecTicker />
+            
+            {/* Quick Stats */}
+            <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full max-w-sm">
+              <h3 className="text-white font-bold tracking-wider mb-4 text-center">BUSINESS STATS</h3>
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-black text-acid-yellow">{vehicles.length}</p>
+                  <p className="text-gray-300 text-xs tracking-wider">VEHICLES</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-acid-yellow">15+</p>
+                  <p className="text-gray-300 text-xs tracking-wider">YEARS</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-acid-yellow">500+</p>
+                  <p className="text-gray-300 text-xs tracking-wider">CUSTOMERS</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-acid-yellow">4.8★</p>
+                  <p className="text-gray-300 text-xs tracking-wider">RATING</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-20">
+        <div className="w-1 h-16 bg-gradient-to-b from-acid-yellow to-transparent rounded-full shadow-lg"></div>
+        <p className="text-white text-xs tracking-widest mt-2 text-center">SCROLL</p>
+      </div>
+    </section>
+  );
 };
+
+export default HeroSection;
