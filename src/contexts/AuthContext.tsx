@@ -76,7 +76,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    getInitialSession();
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.log("⏰ Auth timeout - setting loading to false");
+        setLoading(false);
+      }
+    }, 3000);
+
+    getInitialSession().finally(() => {
+      clearTimeout(timeoutId);
+    });
 
     // Listen for auth changes
     let subscription: any = null;
@@ -100,6 +110,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       if (subscription) {
         subscription.unsubscribe();
       }
@@ -133,6 +144,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) {
         console.error("❌ Profile fetch error:", error);
+        // Don't leave loading state hanging on profile fetch error
+        setLoading(false);
         return;
       }
 
@@ -149,8 +162,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(userProfile);
         console.log("✅ User profile loaded:", data.email, "Role:", data.role);
       }
+      setLoading(false);
     } catch (error) {
       console.error("❌ Profile fetch error:", error);
+      setLoading(false);
     }
   };
 
