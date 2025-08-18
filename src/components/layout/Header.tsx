@@ -1,182 +1,207 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Phone } from 'lucide-react';
-import { useContent } from '../../contexts/ContentContext';
-import { useVehicles } from '../../contexts/VehicleContext';
-import Car3D from '../ui/Car3D';
-import SpecTicker from '../ui/SpecTicker';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Car, Phone, MapPin, Calendar } from 'lucide-react';
 
-const HeroSection: React.FC = () => {
-  const { getSectionByType } = useContent();
-  const { vehicles } = useVehicles();
-  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
-  const [imageLoaded, setImageLoaded] = useState(false);
-  
-  const heroContent = getSectionByType('hero');
-  const featuredVehicle = vehicles.find(v => v.status === 'available') || vehicles[0];
-  
-  // Always show hero section with fallback content
-  const content = heroContent?.content || {
-    heading: 'PRECISION PERFORMANCE PERFECTION',
-    subheading: 'Where automotive excellence meets cutting-edge service',
-    description: 'Experience the pinnacle of automotive luxury and performance',
-    buttonText: 'BROWSE CARS',
-    buttonLink: '/inventory',
-    backgroundColor: '#0B0B0C',
-    textColor: '#FFFFFF',
-    accentColor: '#D7FF00'
-  };
+const Header: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    // Ensure component is marked as loaded
-    setIsLoaded(true);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navigation = [
+    { name: 'HOME', href: '/' },
+    { name: 'INVENTORY', href: '/inventory' },
+    { name: 'SERVICES', href: '/services' },
+    { name: 'CONTACT', href: '/contact' },
+  ];
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Hero Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      
-      {/* Animated Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-grid-pattern animate-grid-flow"></div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-acid-yellow rounded-full animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-neon-lime rounded-full animate-pulse delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-acid-yellow rounded-full animate-pulse delay-2000"></div>
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center min-h-screen py-20">
-          {/* Content Column */}
-          <div className="lg:col-span-2 order-2 lg:order-1 space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-none">
-                <span className="block text-white drop-shadow-2xl">PRECISION</span>
-                <span className="block text-acid-yellow drop-shadow-2xl animate-pulse">PERFORMANCE</span>
-                <span className="block text-white drop-shadow-2xl">PERFECTION</span>
-              </h1>
-              
-              <p className="text-xl sm:text-2xl text-gray-200 max-w-2xl font-light leading-relaxed drop-shadow-lg">
-                {content.subheading || 'Where automotive excellence meets cutting-edge service'}
-              </p>
-              
-              <p className="text-lg text-gray-300 max-w-xl drop-shadow-md">
-                {content.description || 'Experience the pinnacle of automotive luxury and performance'}
-              </p>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      isScrolled 
+        ? 'bg-matte-black/95 backdrop-blur-lg border-b border-gray-800 shadow-2xl' 
+        : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Enhanced Logo with High Visibility */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className={`relative w-12 h-12 rounded-sm flex items-center justify-center transition-all duration-300 transform group-hover:scale-110 ${
+              isScrolled 
+                ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30' 
+                : 'bg-gradient-to-br from-red-500 to-red-600 shadow-2xl shadow-red-500/50 border-2 border-red-400/50'
+            }`}>
+              {/* Emergency Icon with Enhanced Visibility */}
+              <div className="relative">
+                <Car className="w-7 h-7 text-white drop-shadow-lg" />
+                {/* Pulsing glow effect for emergency visibility */}
+                <div className="absolute inset-0 bg-red-400 rounded-sm opacity-30 animate-pulse"></div>
+              </div>
+              {/* Additional glow ring for maximum visibility */}
+              <div className="absolute inset-0 rounded-sm border-2 border-red-300/40 animate-pulse"></div>
             </div>
+            <div className="hidden sm:block">
+              <span className={`text-xl font-black tracking-wider transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-white drop-shadow-sm' 
+                  : 'text-white drop-shadow-2xl'
+              }`}>
+                APEX AUTO
+              </span>
+              <div className="text-xs text-red-400 font-bold tracking-widest">
+                EMERGENCY SERVICE
+              </div>
+            </div>
+          </Link>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-6">
-              <Link 
-                to={content.buttonLink || '/inventory'} 
-                className="group bg-acid-yellow text-black px-10 py-5 rounded-sm font-bold tracking-wider hover:bg-neon-lime transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-acid-yellow/25 hover:scale-105"
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`text-sm font-bold tracking-wider transition-all duration-300 hover:text-red-400 ${
+                  location.pathname === item.href
+                    ? 'text-red-400 border-b-2 border-red-400'
+                    : isScrolled
+                    ? 'text-white hover:text-red-400'
+                    : 'text-white drop-shadow-lg hover:text-red-400'
+                }`}
               >
-                <span>{content.buttonText || 'BROWSE CARS'}</span>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+                {item.name}
               </Link>
-              
-              <Link to="/book" className="group border-2 border-white/80 text-white px-10 py-5 rounded-sm font-bold tracking-wider hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center space-x-3 backdrop-blur-sm hover:scale-105">
-                <Play className="w-6 h-6" />
-                <span>BOOK SERVICE</span>
-              </Link>
-            </div>
+            ))}
+          </nav>
 
-            {/* Secondary Actions */}
-            <div className="flex flex-wrap gap-8 pt-6">
-              <a href="tel:+14169166475" className="text-gray-300 hover:text-acid-yellow transition-colors duration-300 flex items-center space-x-3 group">
-                <div className="p-2 bg-white/10 rounded-full group-hover:bg-acid-yellow/20 transition-colors duration-300">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <span className="text-sm font-bold tracking-wider">CALL NOW</span>
-              </a>
-              <a href="https://maps.google.com/?q=179+Weston+Rd,+Toronto,+ON+M6N+3A5" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-acid-yellow transition-colors duration-300 text-sm font-bold tracking-wider">
-                GET DIRECTIONS
-              </a>
-            </div>
-
-            {/* Featured Vehicle Info */}
-            {featuredVehicle && (
-              <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-6 max-w-md">
-                <h3 className="text-acid-yellow font-bold tracking-wider mb-2">FEATURED VEHICLE</h3>
-                <p className="text-white text-lg font-bold">
-                  {featuredVehicle.year} {featuredVehicle.make} {featuredVehicle.model}
-                </p>
-                <p className="text-gray-300 text-sm mb-3">
-                  {featuredVehicle.specs?.hp || 500} HP • {featuredVehicle.mileage.toLocaleString()} km
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-acid-yellow font-black text-xl">
-                    ${featuredVehicle.price.toLocaleString()} CAD
-                  </span>
-                  <Link 
-                    to={`/vehicle/${featuredVehicle.id}`}
-                    className="text-white hover:text-acid-yellow transition-colors duration-300 text-sm font-medium"
-                  >
-                    VIEW DETAILS →
-                  </Link>
-                </div>
+          {/* Enhanced Action Buttons */}
+          <div className="flex items-center space-x-4">
+            {/* Enhanced Car Browser Button */}
+            <Link
+              to="/inventory"
+              className={`group relative px-6 py-3 rounded-sm font-bold tracking-wider text-sm transition-all duration-300 transform hover:scale-105 ${
+                isScrolled
+                  ? 'bg-gradient-to-r from-electric-blue-500 to-electric-blue-600 text-white shadow-lg shadow-electric-blue-500/30 hover:shadow-electric-blue-500/50'
+                  : 'bg-gradient-to-r from-electric-blue-500 to-electric-blue-600 text-white shadow-2xl shadow-electric-blue-500/50 border-2 border-electric-blue-400/50 hover:shadow-electric-blue-500/70'
+              }`}
+              style={{
+                background: isScrolled 
+                  ? 'linear-gradient(135deg, #0066FF 0%, #0052CC 100%)'
+                  : 'linear-gradient(135deg, #0066FF 0%, #0052CC 100%)',
+                boxShadow: isScrolled
+                  ? '0 4px 20px rgba(0, 102, 255, 0.3), 0 0 0 1px rgba(0, 102, 255, 0.2)'
+                  : '0 8px 32px rgba(0, 102, 255, 0.5), 0 0 0 2px rgba(0, 102, 255, 0.3), 0 0 20px rgba(0, 102, 255, 0.2)'
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <Car className="w-5 h-5 drop-shadow-sm" />
+                <span className="drop-shadow-sm">BROWSE CARS</span>
               </div>
-            )}
-          </div>
+              {/* Animated glow effect */}
+              <div className="absolute inset-0 rounded-sm bg-gradient-to-r from-electric-blue-400 to-electric-blue-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+            </Link>
 
-          {/* Stats Column */}
-          <div className="order-1 lg:order-2 flex flex-col items-center justify-center space-y-8">
-            <SpecTicker />
-            
-            {/* Quick Stats */}
-            <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full max-w-sm">
-              <h3 className="text-white font-bold tracking-wider mb-4 text-center">BUSINESS STATS</h3>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-black text-acid-yellow">{vehicles.length}</p>
-                  <p className="text-gray-300 text-xs tracking-wider">VEHICLES</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-acid-yellow">15+</p>
-                  <p className="text-gray-300 text-xs tracking-wider">YEARS</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-acid-yellow">500+</p>
-                  <p className="text-gray-300 text-xs tracking-wider">CUSTOMERS</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-acid-yellow">4.8★</p>
-                  <p className="text-gray-300 text-xs tracking-wider">RATING</p>
-                </div>
+            {/* Enhanced Emergency Contact Button */}
+            <a
+              href="tel:+14169166475"
+              className={`group relative px-6 py-3 rounded-sm font-bold tracking-wider text-sm transition-all duration-300 transform hover:scale-105 ${
+                isScrolled
+                  ? 'bg-gradient-to-r from-neon-green-500 to-neon-green-600 text-black shadow-lg shadow-neon-green-500/30 hover:shadow-neon-green-500/50'
+                  : 'bg-gradient-to-r from-neon-green-500 to-neon-green-600 text-black shadow-2xl shadow-neon-green-500/50 border-2 border-neon-green-400/50 hover:shadow-neon-green-500/70'
+              }`}
+              style={{
+                background: isScrolled 
+                  ? 'linear-gradient(135deg, #00FF41 0%, #00CC33 100%)'
+                  : 'linear-gradient(135deg, #00FF41 0%, #00CC33 100%)',
+                boxShadow: isScrolled
+                  ? '0 4px 20px rgba(0, 255, 65, 0.3), 0 0 0 1px rgba(0, 255, 65, 0.2)'
+                  : '0 8px 32px rgba(0, 255, 65, 0.5), 0 0 0 2px rgba(0, 255, 65, 0.3), 0 0 20px rgba(0, 255, 65, 0.2)'
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <Phone className="w-5 h-5 drop-shadow-sm" />
+                <span className="drop-shadow-sm">EMERGENCY</span>
               </div>
-            </div>
+              {/* Pulsing effect for emergency urgency */}
+              <div className="absolute inset-0 rounded-sm bg-neon-green-300 opacity-0 group-hover:opacity-30 animate-pulse"></div>
+            </a>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`md:hidden p-3 rounded-sm transition-all duration-300 ${
+                isScrolled
+                  ? 'bg-white/10 text-white hover:bg-white/20'
+                  : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border border-white/20'
+              }`}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-20">
-        <div className="w-1 h-16 bg-gradient-to-b from-acid-yellow to-transparent rounded-full shadow-lg"></div>
-        <p className="text-white text-xs tracking-widest mt-2 text-center">SCROLL</p>
-      </div>
-    </section>
+      {/* Enhanced Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-matte-black/98 backdrop-blur-lg border-t border-gray-800 shadow-2xl">
+          <div className="px-4 py-6 space-y-4">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`block py-3 px-4 rounded-sm text-lg font-bold tracking-wider transition-all duration-300 ${
+                  location.pathname === item.href
+                    ? 'text-red-400 bg-red-400/10 border-l-4 border-red-400'
+                    : 'text-white hover:text-red-400 hover:bg-white/5'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+            
+            {/* Mobile Action Buttons */}
+            <div className="pt-4 space-y-3 border-t border-gray-800">
+              <Link
+                to="/inventory"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center space-x-3 w-full py-4 rounded-sm font-bold tracking-wider text-white transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #0066FF 0%, #0052CC 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 102, 255, 0.3)'
+                }}
+              >
+                <Car className="w-5 h-5" />
+                <span>BROWSE CARS</span>
+              </Link>
+              
+              <a
+                href="tel:+14169166475"
+                className="flex items-center justify-center space-x-3 w-full py-4 rounded-sm font-bold tracking-wider text-black transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #00FF41 0%, #00CC33 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 255, 65, 0.3)'
+                }}
+              >
+                <Phone className="w-5 h-5" />
+                <span>EMERGENCY CALL</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 
-export default HeroSection;
+export default Header;
