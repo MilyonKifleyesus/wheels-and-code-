@@ -1,31 +1,20 @@
-      // Add timeout to profile fetch
-      const profilePromise = supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-        
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
-      );
-      
-      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Play, Phone } from 'lucide-react';
+import { useContent } from '../../contexts/ContentContext';
+import { useVehicles } from '../../contexts/VehicleContext';
+import Car3D from '../ui/Car3D';
 import SpecTicker from '../ui/SpecTicker';
 
 const HeroSection: React.FC = () => {
   const { getSectionByType } = useContent();
+  const { vehicles } = useVehicles();
   const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-        // Don't throw error, just continue without profile
-        console.warn("⚠️ Continuing without profile data");
-        return;
-  const [imageLoaded, setImageLoaded] = useState(false);
   
   const heroContent = getSectionByType('hero');
+  const featuredVehicle = vehicles.find(v => v.status === 'available') || vehicles[0];
   
   // Always show hero section with fallback content
   const content = heroContent?.content || {
@@ -36,8 +25,6 @@ const HeroSection: React.FC = () => {
     buttonLink: '/inventory',
     backgroundColor: '#0B0B0C',
     textColor: '#FFFFFF',
-      // Don't let profile errors block the auth flow
-      console.log("⚠️ Continuing without profile due to error");
     accentColor: '#D7FF00'
   };
 
@@ -67,97 +54,6 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
-          alt="Luxury automotive showroom"
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
-        {/* Fallback gradient while image loads */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
-      </div>
-      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -177,17 +73,6 @@ const HeroSection: React.FC = () => {
       </div>
       
       {/* Animated Grid Pattern */}
-        try {
-        } catch (timeoutError) {
-          console.warn("⚠️ Session check timed out, continuing without session");
-        }
-      <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
-          imageLoaded ? 'opacity-0' : 'opacity-100'
-        }`}></div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/60"></div>
-        {/* Bottom gradient for seamless transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent"></div>
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-grid-pattern animate-grid-flow"></div>
       </div>
