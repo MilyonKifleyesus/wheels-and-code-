@@ -64,10 +64,6 @@ export const safeSupabaseCall = async <T>(
     return fallback;
   }
 };
-    },
-  },
-})
-  : null;
 
 // Test connection function
 export const testSupabaseConnection = async () => {
