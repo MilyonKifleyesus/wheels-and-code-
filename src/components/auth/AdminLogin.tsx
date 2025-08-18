@@ -30,6 +30,16 @@ const AdminLogin: React.FC = () => {
       return;
     }
 
+    // Check if Supabase is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      setError("Supabase environment variables not configured. Please check your .env file.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       setSuccess("Signing in...");
       

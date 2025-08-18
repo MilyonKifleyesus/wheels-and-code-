@@ -5,21 +5,27 @@ const validateEnvironmentVariables = () => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
-  console.log("🔍 Environment Variable Check:");
-  console.log("==========================================");
-  console.log("VITE_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing");
-  console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing");
-  console.log("Environment Mode:", import.meta.env.MODE);
-  console.log("All Environment Variables:", Object.keys(import.meta.env));
+  // Only log in development mode
+  if (import.meta.env.DEV) {
+    console.log("🔍 Environment Variable Check:");
+    console.log("==========================================");
+    console.log("VITE_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing");
+    console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing");
+    console.log("Environment Mode:", import.meta.env.MODE);
+  }
   
   if (supabaseUrl) {
-    console.log("URL Value:", supabaseUrl);
-    console.log("URL Format Valid:", supabaseUrl.includes('.supabase.co') ? "✅ Yes" : "❌ No");
+    if (import.meta.env.DEV) {
+      console.log("URL Value:", supabaseUrl);
+      console.log("URL Format Valid:", supabaseUrl.includes('.supabase.co') ? "✅ Yes" : "❌ No");
+    }
   }
   
   if (supabaseAnonKey) {
-    console.log("Key Length:", supabaseAnonKey.length);
-    console.log("Key Format Valid:", supabaseAnonKey.length > 50 ? "✅ Yes" : "❌ No");
+    if (import.meta.env.DEV) {
+      console.log("Key Length:", supabaseAnonKey.length);
+      console.log("Key Format Valid:", supabaseAnonKey.length > 50 ? "✅ Yes" : "❌ No");
+    }
   }
   
   return { supabaseUrl, supabaseAnonKey };

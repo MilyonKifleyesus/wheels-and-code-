@@ -14,38 +14,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, loading, isAdmin } = useAuth();
 
-  // Add timeout for loading state
-  const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
-  
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        setShowTimeoutMessage(true);
-      }
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, [loading]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-matte-black flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-400 mt-4">
-            {showTimeoutMessage ? 'Authentication taking longer than expected...' : 'Loading authentication...'}
-          </p>
-          {showTimeoutMessage && (
-            <div className="mt-4 space-y-2">
-              <p className="text-gray-500 text-sm">This might indicate a configuration issue.</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-acid-yellow text-black px-4 py-2 rounded-sm font-medium hover:bg-neon-lime transition-colors duration-300"
-              >
-                RELOAD PAGE
-              </button>
-            </div>
-          )}
+          <p className="text-gray-400 mt-4">Loading authentication...</p>
         </div>
       </div>
     );
