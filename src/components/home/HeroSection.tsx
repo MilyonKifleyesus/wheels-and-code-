@@ -53,6 +53,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -70,6 +71,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -87,6 +89,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -106,13 +109,13 @@ const HeroSection: React.FC = () => {
       </div>
       
       {/* Animated Grid Pattern */}
+      <div className={`absolute inset-0 bg-gradient-to-br from-matte-black via-carbon-gray to-dark-graphite transition-opacity duration-1000 ${
           imageLoaded ? 'opacity-0' : 'opacity-100'
         }`}></div>
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/60"></div>
         {/* Bottom gradient for seamless transition */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent"></div>
-      </div>
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-grid-pattern animate-grid-flow"></div>
       </div>
