@@ -173,10 +173,11 @@ const BookingPage: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2 tracking-wider">
+                    <label htmlFor="booking-date" className="block text-gray-400 text-sm font-medium mb-2 tracking-wider">
                       PREFERRED DATE
                     </label>
                     <input
+                      id="booking-date"
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({...formData, date: e.target.value})}

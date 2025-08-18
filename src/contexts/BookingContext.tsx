@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 export interface Booking {
   id: number;
@@ -104,10 +104,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
 
     // Try to enhance with database data if available
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
+      if (!isSupabaseConfigured()) {
         console.log("⚠️ Supabase not configured, using sample data only");
         return;
       }

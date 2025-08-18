@@ -59,6 +59,7 @@ const BookingManager: React.FC = () => {
         date: formData.get('date') as string,
         time: formData.get('time') as string,
         notes: formData.get('notes') as string,
+        status: 'pending' as const,
         estimatedCost: parseInt(formData.get('estimatedCost') as string) || 0
       };
 
@@ -365,10 +366,10 @@ const BookingManager: React.FC = () => {
 
       {/* Add Booking Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="add-booking-title">
           <div className="bg-dark-graphite border border-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">ADD NEW BOOKING</h3>
+              <h3 id="add-booking-title" className="text-xl font-bold text-white">ADD NEW BOOKING</h3>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="text-gray-400 hover:text-white transition-colors duration-300"
@@ -404,21 +405,25 @@ const BookingManager: React.FC = () => {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select
-                  name="service"
-                  className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
-                  required
-                >
-                  <option value="">Select Service</option>
-                  <option value="Oil Change">Oil Change</option>
-                  <option value="Brake Service">Brake Service</option>
-                  <option value="Engine Diagnostics">Engine Diagnostics</option>
-                  <option value="Performance Tune">Performance Tune</option>
-                  <option value="Safety Inspection">Safety Inspection</option>
-                  <option value="Transmission Service">Transmission Service</option>
-                  <option value="AC Service">AC Service</option>
-                  <option value="Tire Service">Tire Service</option>
-                </select>
+                <div>
+                  <label htmlFor="add-service" className="sr-only">Service</label>
+                  <select
+                    id="add-service"
+                    name="service"
+                    className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+                    required
+                  >
+                    <option value="">Select Service</option>
+                    <option value="Oil Change">Oil Change</option>
+                    <option value="Brake Service">Brake Service</option>
+                    <option value="Engine Diagnostics">Engine Diagnostics</option>
+                    <option value="Performance Tune">Performance Tune</option>
+                    <option value="Safety Inspection">Safety Inspection</option>
+                    <option value="Transmission Service">Transmission Service</option>
+                    <option value="AC Service">AC Service</option>
+                    <option value="Tire Service">Tire Service</option>
+                  </select>
+                </div>
                 <input
                   name="vehicle"
                   type="text"
@@ -429,29 +434,37 @@ const BookingManager: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input
-                  name="date"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
-                  required
-                />
-                <select
-                  name="time"
-                  className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
-                  required
-                >
-                  <option value="">Select Time</option>
-                  <option value="8:00 AM">8:00 AM</option>
-                  <option value="9:00 AM">9:00 AM</option>
-                  <option value="10:00 AM">10:00 AM</option>
-                  <option value="11:00 AM">11:00 AM</option>
-                  <option value="1:00 PM">1:00 PM</option>
-                  <option value="2:00 PM">2:00 PM</option>
-                  <option value="3:00 PM">3:00 PM</option>
-                  <option value="4:00 PM">4:00 PM</option>
-                  <option value="5:00 PM">5:00 PM</option>
-                </select>
+                <div>
+                  <label htmlFor="add-date" className="sr-only">Date</label>
+                  <input
+                    id="add-date"
+                    name="date"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="add-time" className="sr-only">Time</label>
+                  <select
+                    id="add-time"
+                    name="time"
+                    className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+                    required
+                  >
+                    <option value="">Select Time</option>
+                    <option value="8:00 AM">8:00 AM</option>
+                    <option value="9:00 AM">9:00 AM</option>
+                    <option value="10:00 AM">10:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="1:00 PM">1:00 PM</option>
+                    <option value="2:00 PM">2:00 PM</option>
+                    <option value="3:00 PM">3:00 PM</option>
+                    <option value="4:00 PM">4:00 PM</option>
+                    <option value="5:00 PM">5:00 PM</option>
+                  </select>
+                </div>
                 <input
                   name="estimatedCost"
                   type="number"
@@ -490,10 +503,10 @@ const BookingManager: React.FC = () => {
 
       {/* Edit Booking Modal */}
       {editingBooking && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-booking-title">
           <div className="bg-dark-graphite border border-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">EDIT BOOKING</h3>
+              <h3 id="edit-booking-title" className="text-xl font-bold text-white">EDIT BOOKING</h3>
               <button
                 onClick={() => setEditingBooking(null)}
                 className="text-gray-400 hover:text-white transition-colors duration-300"

@@ -157,18 +157,19 @@ export const FormField: React.FC<{
 
   return (
     <div className={className}>
-      <label className="block text-gray-400 text-sm font-medium mb-2 tracking-wider">
+      <label htmlFor={name} className="block text-gray-400 text-sm font-medium mb-2 tracking-wider">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <input
+        id={name}
         name={name}
         type={type}
         placeholder={placeholder}
         onChange={(e) => onChange?.(e.target.value)}
         className={`w-full bg-matte-black border text-white rounded-sm px-4 py-3 focus:outline-none transition-colors duration-300 ${
-          hasError 
-            ? 'border-red-500 focus:border-red-400' 
+          hasError
+            ? 'border-red-500 focus:border-red-400'
             : 'border-gray-700 focus:border-acid-yellow'
         }`}
         required={required}
