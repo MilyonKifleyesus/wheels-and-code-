@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Database, User } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Database, User, Mail } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -10,9 +10,11 @@ const AdminLogin: React.FC = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const navigate = useNavigate();
 
-  const { signIn, loading } = useAuth();
+  const { signIn, resetPassword, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +59,26 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    try {
+      const result = await resetPassword(resetEmail);
+      if (result.success) {
+        setSuccess("Password reset email sent! Check your inbox.");
+        setError("");
+        setShowForgotPassword(false);
+      } else {
+        setError(result.error || "Failed to send reset email");
+      }
+    } catch (error: any) {
+      setError("Password reset failed. Please try again.");
+    }
+  };
   const fillAdminCredentials = () => {
     setEmail("admin@company.com");
     setPassword("admin123456");
@@ -100,6 +122,75 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen bg-matte-black flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 bg-acid-yellow rounded-full flex items-center justify-center mb-6">
+              <Mail className="h-8 w-8 text-black" />
+            </div>
+            <h2 className="text-3xl font-bold text-white tracking-wider">
+              RESET PASSWORD
+            </h2>
+            <p className="mt-2 text-gray-400 text-sm">
+              Enter your email to receive reset instructions
+            </p>
+          </div>
+
+          <div className="bg-dark-graphite border border-gray-800 rounded-lg p-8 shadow-2xl">
+            {error && (
+              <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4 flex items-center space-x-3 mb-6">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                <span className="text-red-400 text-sm">{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 flex items-center space-x-3 mb-6">
+                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                <span className="text-green-400 text-sm">{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword} className="space-y-6">
+              <div>
+                <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="resetEmail"
+                  name="resetEmail"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200"
+                  placeholder="admin@company.com"
+                  required
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="flex-1 bg-gray-700 text-white font-medium py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors duration-200"
+                >
+                  Back to Login
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-acid-yellow text-black font-bold py-3 px-4 rounded-lg hover:bg-yellow-400 transition-colors duration-200"
+                >
+                  Send Reset Email
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-matte-black flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
@@ -212,6 +303,16 @@ const AdminLogin: React.FC = () => {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-acid-yellow hover:text-neon-lime transition-colors duration-200"
+              >
+                Forgot your password?
+              </button>
+            </div>
             {/* Submit Button */}
             <button
               type="submit"

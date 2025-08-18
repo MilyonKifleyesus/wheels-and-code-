@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, BarChart3, Eye, Star } from 'lucide-react';
+import { Heart, BarChart3, Eye, Star, Share2 } from 'lucide-react';
 import type { Vehicle } from '../../contexts/VehicleContext';
 
 
@@ -11,6 +11,7 @@ interface VehicleCardProps {
 const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   // Get the first image or use default
   const imageUrl = vehicle.image || vehicle.images?.[0] || 'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800';
@@ -18,6 +19,47 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
   // Ensure specs exist with defaults
   const specs = vehicle.specs || { hp: 500, torque: 600, acceleration: '3.5s' };
   const tags = vehicle.tags || [];
+
+  const handleWishlistToggle = () => {
+    setIsInWishlist(!isInWishlist);
+    // In production, this would save to user preferences
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    if (isInWishlist) {
+      const updated = wishlist.filter((id: string) => id !== vehicle.id);
+      localStorage.setItem('wishlist', JSON.stringify(updated));
+    } else {
+      wishlist.push(vehicle.id);
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+      text: `Check out this ${vehicle.year} ${vehicle.make} ${vehicle.model} for $${vehicle.price.toLocaleString()} CAD`,
+      url: `${window.location.origin}/vehicle/${vehicle.id}`
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback to copying URL
+      navigator.clipboard.writeText(shareData.url);
+      // Show toast notification (would implement in production)
+      console.log('URL copied to clipboard');
+    }
+  };
+
+  // Load wishlist status on mount
+  React.useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    setIsInWishlist(wishlist.includes(vehicle.id));
+  }, [vehicle.id]);
+
   return (
     <div className="group bg-dark-graphite border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
       {/* Image Container */}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import Toast from '../components/ui/Toast';
 
 export interface User {
   id: string;
@@ -14,10 +15,14 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  sessionPersisted: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, userData?: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  resendVerification: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +30,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionPersisted, setSessionPersisted] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lastLoginAttempt, setLastLoginAttempt] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
@@ -53,6 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (session?.user && mounted) {
           console.log("✅ Found existing session for:", session.user.email);
+          setSessionPersisted(true);
           await fetchUserProfile(session.user.id);
         }
         
@@ -77,9 +86,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (mounted) {
           if (session?.user) {
+            setSessionPersisted(true);
             await fetchUserProfile(session.user.id);
           } else {
             setUser(null);
+            setSessionPersisted(false);
           }
           setLoading(false);
         }
@@ -95,6 +106,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
+  // Rate limiting for login attempts
+  const checkRateLimit = (): boolean => {
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastLoginAttempt;
+    
+    // Reset attempts after 15 minutes
+    if (timeSinceLastAttempt > 15 * 60 * 1000) {
+      setLoginAttempts(0);
+      return true;
+    }
+    
+    // Allow max 5 attempts per 15 minutes
+    return loginAttempts < 5;
+  };
   const fetchUserProfile = async (userId: string) => {
     try {
       if (!supabase) return;
@@ -131,7 +156,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      // Check rate limiting
+      if (!checkRateLimit()) {
+        return { success: false, error: "Too many login attempts. Please try again in 15 minutes." };
+      }
+
       setLoading(true);
+      setLastLoginAttempt(Date.now());
+      setLoginAttempts(prev => prev + 1);
       
       if (!supabase) {
         // Mock authentication for development
@@ -143,6 +175,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: "admin"
           };
           setUser(mockUser);
+          setSessionPersisted(true);
+          setLoginAttempts(0); // Reset on successful login
           setLoading(false);
           console.log("✅ Mock admin login successful");
           return { success: true };
@@ -155,7 +189,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          persistSession: true
+        }
       });
 
       if (error) {
@@ -166,6 +203,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (data.user) {
         console.log("✅ Sign in successful:", data.user.id);
+        setLoginAttempts(0); // Reset on successful login
         await fetchUserProfile(data.user.id);
         setLoading(false);
         return { success: true };
@@ -197,7 +235,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             full_name: userData?.full_name,
             phone: userData?.phone,
             role: userData?.role || 'customer'
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -214,6 +253,66 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!supabase) {
+        return { success: false, error: "Authentication not configured" };
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Password reset failed" };
+    }
+  };
+
+  const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!supabase) {
+        return { success: false, error: "Authentication not configured" };
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Password update failed" };
+    }
+  };
+
+  const resendVerification = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!supabase || !user) {
+        return { success: false, error: "Not authenticated" };
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Resend verification failed" };
+    }
+  };
   const signOut = async (): Promise<void> => {
     try {
       setLoading(true);
@@ -222,6 +321,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await supabase.auth.signOut();
       }
       setUser(null);
+      setSessionPersisted(false);
       setLoading(false);
       console.log("✅ Sign out successful");
     } catch (error) {
@@ -259,10 +359,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       user,
       loading,
       isAdmin,
+      sessionPersisted,
       signIn,
       signUp,
+      resetPassword,
+      updatePassword,
       signOut,
-      updateProfile
+      updateProfile,
+      resendVerification
     }}>
       {children}
     </AuthContext.Provider>

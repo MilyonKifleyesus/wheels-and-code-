@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import VehicleCard from '../components/ui/VehicleCard';
 import { useVehicles } from '../contexts/VehicleContext';
@@ -12,13 +13,23 @@ const InventoryPage: React.FC = () => {
   const [priceFilter, setPriceFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('');
   const [mileageFilter, setMileageFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
+  // Handle URL search parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, []);
   // Filter vehicles based on search and filters
   const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch = searchTerm === '' || 
       vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.year.toString().includes(searchTerm);
+      vehicle.year.toString().includes(searchTerm) ||
+      `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesMake = makeFilter === '' || makeFilter === 'All Makes' || 
       vehicle.make.toLowerCase() === makeFilter.toLowerCase();
@@ -39,6 +50,24 @@ const InventoryPage: React.FC = () => {
       (mileageFilter === '30k+' && vehicle.mileage >= 30000);
     
     return matchesSearch && matchesMake && matchesPrice && matchesYear && matchesMileage;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'year-new':
+        return b.year - a.year;
+      case 'year-old':
+        return a.year - b.year;
+      case 'mileage-low':
+        return a.mileage - b.mileage;
+      case 'mileage-high':
+        return b.mileage - a.mileage;
+      case 'newest':
+      default:
+        return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+    }
   });
 
   return (
@@ -68,6 +97,20 @@ const InventoryPage: React.FC = () => {
               />
             </div>
             
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+            >
+              <option value="newest">Newest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="year-new">Year: Newest First</option>
+              <option value="year-old">Year: Oldest First</option>
+              <option value="mileage-low">Mileage: Low to High</option>
+              <option value="mileage-high">Mileage: High to Low</option>
+            </select>
+
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center space-x-2 bg-white/10 text-white px-6 py-3 rounded-sm font-medium tracking-wider hover:bg-white/20 transition-colors duration-300"
@@ -109,6 +152,8 @@ const InventoryPage: React.FC = () => {
                 <option>LAMBORGHINI</option>
                 <option>PORSCHE</option>
                 <option>BMW</option>
+                <option>MERCEDES</option>
+                <option>AUDI</option>
               </select>
               
               <select 
@@ -129,10 +174,13 @@ const InventoryPage: React.FC = () => {
                 className="bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
               >
                 <option>Year</option>
+                <option>2024</option>
                 <option>2023</option>
                 <option>2022</option>
                 <option>2021</option>
                 <option>2020</option>
+                <option>2019</option>
+                <option>2018</option>
               </select>
               
               <select 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Car, Phone, MapPin, Calendar } from 'lucide-react';
+import { Menu, X, Car, Phone, MapPin, Calendar, Search } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
   useEffect(() => {
@@ -16,6 +18,12 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/inventory?search=${encodeURIComponent(searchQuery.trim())}`;
+    }
+  };
   const navigation = [
     { name: 'HOME', href: '/' },
     { name: 'INVENTORY', href: '/inventory' },
@@ -82,6 +90,18 @@ const Header: React.FC = () => {
 
           {/* Enhanced Action Buttons */}
           <div className="flex items-center space-x-4">
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`group relative p-3 rounded-sm font-bold tracking-wider text-sm transition-all duration-300 transform hover:scale-105 ${
+                isScrolled
+                  ? 'bg-white/10 text-white hover:bg-white/20'
+                  : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border border-white/20'
+              }`}
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
             {/* Enhanced Car Browser Button */}
             <Link
               to="/inventory"
@@ -149,12 +169,51 @@ const Header: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Search Bar */}
+        {isSearchOpen && (
+          <div className="absolute top-full left-0 right-0 bg-matte-black/95 backdrop-blur-lg border-b border-gray-800 p-4">
+            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search vehicles by make, model, year..."
+                  className="w-full bg-dark-graphite border border-gray-700 text-white rounded-sm pl-12 pr-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-acid-yellow text-black px-4 py-1 rounded-sm font-medium hover:bg-neon-lime transition-colors duration-300"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Enhanced Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-matte-black/98 backdrop-blur-lg border-t border-gray-800 shadow-2xl">
           <div className="px-4 py-6 space-y-4">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search vehicles..."
+                  className="w-full bg-dark-graphite border border-gray-700 text-white rounded-sm pl-12 pr-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
+                />
+              </div>
+            </form>
+
             {navigation.map((item) => (
               <Link
                 key={item.name}
