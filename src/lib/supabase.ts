@@ -31,14 +31,39 @@ const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables();
 // Create Supabase client with fallback handling
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    })
+  : (() => {
+      console.warn("⚠️ Supabase client not initialized - missing environment variables");
+      return null;
+    })();
+
+// Safe wrapper for Supabase operations
+export const safeSupabaseCall = async <T>(
+  operation: () => Promise<T>,
+  fallback: T
+): Promise<T> => {
+  if (!supabase) {
+    console.warn("⚠️ Supabase not available, using fallback");
+    return fallback;
+  }
+  
+  try {
+    return await operation();
+  } catch (error) {
+    console.warn("⚠️ Supabase operation failed, using fallback:", error);
+    return fallback;
+  }
+};
     },
   },
 })

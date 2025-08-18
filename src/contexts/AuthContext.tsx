@@ -50,6 +50,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         console.log("🔐 Initializing authentication...");
         
+        if (!supabase) {
+          console.log("⚠️ Supabase not configured, skipping auth initialization");
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -77,32 +85,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuth();
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔄 Auth state changed:", event);
+    // Listen for auth changes only if supabase is available
+    let subscription: any = null;
+    
+    if (supabase) {
+      const {
+        data: { subscription: authSubscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("🔄 Auth state changed:", event);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log("✅ User signed in:", session.user.email);
+          await fetchUserProfile(session.user.id, session.user.email || '');
+        } else if (event === 'SIGNED_OUT') {
+          console.log("👋 User signed out");
+          setUser(null);
+        }
+        
+        if (mounted) {
+          setLoading(false);
+        }
+      });
       
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ User signed in:", session.user.email);
-        await fetchUserProfile(session.user.id, session.user.email || '');
-      } else if (event === 'SIGNED_OUT') {
-        console.log("👋 User signed out");
-        setUser(null);
-      }
-      
-      if (mounted) {
-        setLoading(false);
-      }
-    });
+      subscription = authSubscription;
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
   const fetchUserProfile = async (userId: string, email: string) => {
+    if (!supabase) {
+      console.warn("⚠️ Supabase not available for profile fetch");
+      return;
+    }
+    
     try {
       console.log("👤 Fetching profile for user:", userId);
       
@@ -142,6 +163,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const createUserProfile = async (userId: string, email: string) => {
+    if (!supabase) {
+      console.warn("⚠️ Supabase not available for profile creation");
+      return;
+    }
+    
     try {
       console.log("👤 Creating user profile...");
       
@@ -177,6 +203,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      console.error("❌ Supabase not available for sign in");
+      return { success: false, error: "Database connection not available" };
+    }
+    
     try {
       setUser(null); // Clear any existing user state
       
@@ -242,14 +273,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log("👋 Signing out...");
       setLoading(true);
-      await supabase.auth.signOut();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       setUser(null);
       console.log("✅ Sign out successful");
     } catch (error) {
       console.error("❌ Sign out error:", error);
       setUser(null); // Force sign out locally
-    } finally {
-      setLoading(false);
     }
   };
 
