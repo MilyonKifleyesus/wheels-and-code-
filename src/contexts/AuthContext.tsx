@@ -67,6 +67,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -84,6 +85,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -101,6 +103,7 @@ const HeroSection: React.FC = () => {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/40"></div>
       </div>
+      <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
           alt="Luxury automotive showroom"
@@ -174,7 +177,7 @@ const HeroSection: React.FC = () => {
       </div>
       
       {/* Animated Grid Pattern */}
-          }
+        try {
         } catch (timeoutError) {
           console.warn("⚠️ Session check timed out, continuing without session");
         }
