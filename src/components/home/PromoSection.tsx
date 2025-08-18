@@ -13,11 +13,7 @@ const PromoSection: React.FC = () => {
   
   const promoContent = getSectionById('promo');
   
-  // Don't render if section is hidden
-  if (!promoContent?.visible) {
-    return null;
-  }
-
+  // Ensure hooks are always called in the same order across renders
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -40,6 +36,11 @@ const PromoSection: React.FC = () => {
 
     return () => clearInterval(timer);
   }, []);
+  
+  // Don't render if section is hidden
+  if (!promoContent?.visible) {
+    return null;
+  }
 
   return (
     <section className="py-16 relative overflow-hidden">
