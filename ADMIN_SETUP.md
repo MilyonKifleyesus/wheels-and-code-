@@ -2,109 +2,67 @@
 
 ## **The Problem**
 
-Your admin login is failing with a 400 Bad Request error because:
+Your admin login is failing with "Invalid login credentials" because:
 
-1. The admin user account doesn't exist yet
-2. The database security policies are too restrictive
-3. The database schema is more complex than the original migrations expected
+1. The admin user account doesn't exist in Supabase's authentication system
+2. Only a profile record exists, but no actual auth user
+3. Supabase requires users to be created in the auth.users table to login
 
 ## **The Solution**
 
-I've created a comprehensive fix that will resolve all these issues automatically. The fix migration has been updated to work with your actual database schema.
+You need to create the admin user in Supabase's authentication system. There are two ways to do this:
 
-## **Step 1: Run the Updated Fix Migration**
+## **Method 1: Use Supabase Dashboard (Recommended)**
 
 1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
 2. Select your project: `otogefbrswdxyvvageop`
-3. Go to **SQL Editor**
-4. Copy and paste the entire content of this file: `supabase/migrations/20250817141111_fix_auth_issues.sql`
-5. Click **Run** to execute the migration
+3. Go to **Authentication** → **Users**
+4. Click **"Add user"**
+5. Fill in:
+   - **Email**: `mili.kifleyesus@gmail.com`
+   - **Password**: `P@ssw0rd123!`
+   - **Auto Confirm User**: ✅ Check this box
+6. Click **"Create user"**
 
-**✅ This updated migration will:**
+## **Method 2: Use the Setup Script**
 
-- Create any missing tables with the correct structure for your schema
-- Fix all RLS (Row Level Security) policies
-- Create the admin user profile
-- Set up proper permissions for your actual database structure
-- Work with your comprehensive schema (profiles, vehicles, services, bookings, etc.)
-
-## **Step 2: Create the Admin User**
-
-1. Go to your admin login page in your browser
-2. Press `F12` to open Developer Tools
-3. Click on the **Console** tab
-4. Copy and paste this code:
+1. Go to your admin login page: `/admin`
+2. Press `F12` to open Developer Tools  
+3. Go to the **Console** tab
+4. Run this command:
 
 ```javascript
-// Import and run the setup
 import("./src/lib/setupAdmin.ts").then((module) => {
-  module.quickFix();
+  module.setupAdminUser();
 });
 ```
 
-5. Press Enter to run it
+5. This will attempt to create the user via signUp
 
-## **Step 3: Verify the Setup**
+## **Step 3: Test the Login**
 
-You should see output like:
-
-```
-🔧 Running quick fix...
-🚀 Starting enhanced admin user setup...
-✅ Admin profile created
-✅ Quick fix completed!
-```
-
-## **Step 4: Test Login**
-
-Now try logging in with:
+After creating the user, try logging in with:
 
 - **Email**: `admin@company.com`
 - **Password**: `admin123456`
 
-## **What the Updated Fix Does**
+## **Why This Happens**
 
-✅ **Creates missing tables** with the correct structure for your schema
-✅ **Fixes RLS policies** that were blocking access
-✅ **Creates admin profile** in the database
-✅ **Sets up proper permissions** for admin users
-✅ **Handles authentication issues** automatically
-✅ **Works with your actual database schema** (not simplified assumptions)
-✅ **Provides fallback methods** if the main approach fails
+The error occurs because:
+- Supabase requires users to exist in the `auth.users` table to authenticate
+- Previous setup only created a profile record, not an auth user
+- The `signInWithPassword` function checks against `auth.users`, not `profiles`
 
-## **If You Still Have Issues**
+## **Verification**
 
-Run this diagnostic code in the console:
+After creating the user, you should be able to:
+1. ✅ See the user in Supabase Dashboard → Authentication → Users
+2. ✅ Login successfully with the credentials
+3. ✅ Access the admin panel features
 
-```javascript
-import("./src/lib/setupAdmin.ts").then((module) => {
-  module.testAdminSetup();
-});
-```
+## **Important Notes**
 
-This will show you exactly what's working and what isn't.
-
-## **Expected Result**
-
-After running the fix, you should be able to:
-
-1. ✅ Log in to the admin panel
-2. ✅ Access all admin features
-3. ✅ Manage your website content
-4. ✅ View and edit vehicle inventory
-5. ✅ Handle customer bookings
-6. ✅ Manage locations and services
-
-## **Why This Updated Approach Works**
-
-The updated migration:
-
-- **Matches your actual database schema** exactly
-- **Creates tables with correct structure** and constraints
-- **Handles your comprehensive business logic** (locations, staff assignments, etc.)
-- **Applies fixes in the correct order** to avoid errors
-- **Works with your existing data** without conflicts
-
-## **Need Help?**
-
-If you're still experiencing issues after following these steps, the console output will show exactly what's wrong, and I can help you fix it!
+- **Method 1 (Dashboard)** is more reliable and recommended
+- **Method 2 (Script)** may fail due to email confirmation requirements
+- Make sure to check "Auto Confirm User" when creating via dashboard
+- The profile record should already exist from previous setup attempts
