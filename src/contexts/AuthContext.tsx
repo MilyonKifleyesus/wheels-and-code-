@@ -203,10 +203,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (!supabase) {
         // Mock authentication for development
-        if (email === "admin@company.com" && password === "admin123456") {
+        if (email === "mili.kifleyesus@gmail.com" && password === "P@ssw0rd123!") {
           const mockUser: User = {
             id: "mock-admin-id",
-            email: "admin@company.com",
+            email: "mili.kifleyesus@gmail.com",
             full_name: "Admin User",
             role: "admin"
           };

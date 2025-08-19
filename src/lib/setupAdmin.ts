@@ -14,7 +14,7 @@ export const setupAdminUser = async () => {
     const { data: existingProfiles, error: profileCheckError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", "admin@company.com")
+      .eq("email", "mili.kifleyesus@gmail.com")
       .eq("role", "admin");
 
     if (profileCheckError) {
@@ -25,8 +25,8 @@ export const setupAdminUser = async () => {
     if (existingProfiles && existingProfiles.length > 0) {
       console.log("✅ Admin profile already exists:", existingProfiles[0]);
       console.log("You can now try logging in with:");
-      console.log("Email: admin@company.com");
-      console.log("Password: admin123456");
+      console.log("Email: mili.kifleyesus@gmail.com");
+      console.log("Password: P@ssw0rd123!");
       return;
     }
 
@@ -35,8 +35,8 @@ export const setupAdminUser = async () => {
     // Step 2: Create user account with signUp
     console.log("2️⃣ Creating user account...");
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: "admin@company.com",
-      password: "admin123456",
+      email: "mili.kifleyesus@gmail.com",
+      password: "P@ssw0rd123!",
       options: {
         data: {
           full_name: "Admin User",
@@ -67,7 +67,7 @@ export const setupAdminUser = async () => {
         .from("profiles")
         .insert({
           id: authData.user.id,
-          email: "admin@company.com",
+          email: "mili.kifleyesus@gmail.com",
           full_name: "Admin User",
           role: "admin",
         })
@@ -86,8 +86,8 @@ export const setupAdminUser = async () => {
       console.log("✅ Admin profile created:", profileData);
       console.log("🎉 Admin user setup complete!");
       console.log("==========================================");
-      console.log("📧 Email: admin@company.com");
-      console.log("🔑 Password: admin123456");
+      console.log("📧 Email: mili.kifleyesus@gmail.com");
+      console.log("🔑 Password: P@ssw0rd123!");
       console.log("👤 Role: admin");
       console.log("==========================================");
       console.log(
@@ -114,7 +114,7 @@ const createAdminProfileOnly = async () => {
       .from("profiles")
       .insert({
         id: crypto.randomUUID(), // Generate new UUID
-        email: "admin@company.com",
+        email: "mili.kifleyesus@gmail.com",
         full_name: "Admin User",
         role: "admin",
       })
@@ -150,7 +150,7 @@ export const testAdminSetup = async () => {
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", "admin@company.com");
+      .eq("email", "mili.kifleyesus@gmail.com");
 
     if (profileError) {
       console.error("❌ Profile check failed:", profileError);
@@ -173,8 +173,8 @@ export const testAdminSetup = async () => {
     console.log("🔐 Testing login...");
     const { data: loginData, error: loginError } =
       await supabase.auth.signInWithPassword({
-        email: "admin@company.com",
-        password: "admin123456",
+        email: "mili.kifleyesus@gmail.com",
+        password: "P@ssw0rd123!",
       });
 
     if (loginError) {

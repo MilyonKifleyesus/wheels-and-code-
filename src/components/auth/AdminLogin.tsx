@@ -4,8 +4,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState("admin@company.com");
-  const [password, setPassword] = useState("admin123456");
+  const [email, setEmail] = useState("mili.kifleyesus@gmail.com");
+  const [password, setPassword] = useState("P@ssw0rd123!");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -90,8 +90,8 @@ const AdminLogin: React.FC = () => {
     }
   };
   const fillAdminCredentials = () => {
-    setEmail("admin@company.com");
-    setPassword("admin123456");
+    setEmail("mili.kifleyesus@gmail.com");
+    setPassword("P@ssw0rd123!");
     setError("");
     setSuccess("Admin credentials filled. Click 'Sign In' to continue.");
   };
@@ -175,7 +175,7 @@ const AdminLogin: React.FC = () => {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200"
-                  placeholder="admin@company.com"
+                  placeholder="mili.kifleyesus@gmail.com"
                   required
                 />
               </div>
@@ -296,7 +296,7 @@ const AdminLogin: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isSubmitting}
                   className="w-full px-4 py-3 bg-matte-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-acid-yellow focus:border-transparent transition-all duration-200 pr-12 disabled:opacity-50"
-                  placeholder="admin123456"
+                  placeholder="P@ssw0rd123!"
                 />
                 <button
                   type="button"
@@ -344,8 +344,8 @@ const AdminLogin: React.FC = () => {
           <div className="mt-6 p-4 bg-matte-black/50 border border-gray-700 rounded-lg">
             <h4 className="text-gray-300 font-medium text-sm mb-2">Default Credentials:</h4>
             <div className="text-xs text-gray-400 space-y-1">
-              <p><strong>Email:</strong> admin@company.com</p>
-              <p><strong>Password:</strong> admin123456</p>
+              <p><strong>Email:</strong> mili.kifleyesus@gmail.com</p>
+              <p><strong>Password:</strong> P@ssw0rd123!</p>
               <p className="text-acid-yellow mt-2">These credentials are pre-filled for testing</p>
             </div>
           </div>
