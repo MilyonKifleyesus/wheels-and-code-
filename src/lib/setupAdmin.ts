@@ -9,28 +9,49 @@ export const setupAdminUser = async () => {
     console.log("🚀 Starting enhanced admin user setup...");
     console.log("==========================================");
 
+    // Check if Supabase is available
+    if (!supabase) {
+      console.error("❌ Supabase client not available");
+      return;
+    }
+
     // Step 1: Check if admin user already exists
     console.log("1️⃣ Checking if admin user already exists...");
-    const { data: existingProfiles, error: profileCheckError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", "mili.kifleyesus@gmail.com")
-      .eq("role", "admin");
+    
+    // First check if auth user exists by trying to sign in
+    const { data: testLogin, error: testLoginError } = await supabase.auth.signInWithPassword({
+      email: "mili.kifleyesus@gmail.com",
+      password: "P@ssw0rd123!",
+    });
 
-    if (profileCheckError) {
-      console.error("❌ Error checking existing profiles:", profileCheckError);
+    if (testLogin?.user && !testLoginError) {
+      console.log("✅ Admin user already exists and can login!");
+      console.log("User ID:", testLogin.user.id);
+      
+      // Check if profile exists
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", testLogin.user.id)
+        .single();
+        
+      if (!profile) {
+        console.log("🔄 Creating missing profile for existing user...");
+        await supabase.from("profiles").insert({
+          id: testLogin.user.id,
+          email: "mili.kifleyesus@gmail.com",
+          full_name: "Admin User",
+          role: "admin",
+        });
+      }
+      
+      // Sign out after test
+      await supabase.auth.signOut();
+      console.log("✅ Setup verified - you can now login!");
       return;
     }
 
-    if (existingProfiles && existingProfiles.length > 0) {
-      console.log("✅ Admin profile already exists:", existingProfiles[0]);
-      console.log("You can now try logging in with:");
-      console.log("Email: mili.kifleyesus@gmail.com");
-      console.log("Password: P@ssw0rd123!");
-      return;
-    }
-
-    console.log("❌ No admin profile found, creating new one...");
+    console.log("❌ Admin user doesn't exist, creating new one...");
 
     // Step 2: Create user account with signUp
     console.log("2️⃣ Creating user account...");
@@ -38,6 +59,7 @@ export const setupAdminUser = async () => {
       email: "mili.kifleyesus@gmail.com",
       password: "P@ssw0rd123!",
       options: {
+        emailRedirectTo: undefined, // Disable email confirmation
         data: {
           full_name: "Admin User",
           role: "admin",
@@ -47,19 +69,31 @@ export const setupAdminUser = async () => {
 
     if (authError) {
       console.error("❌ Auth signup error:", authError);
-
-      // If signup fails, try to create just the profile
-      console.log("🔄 Trying alternative approach - creating profile only...");
-      await createAdminProfileOnly();
+      
+      // Check if user already exists error
+      if (authError.message.includes("already registered")) {
+        console.log("✅ User already exists in auth system");
+        console.log("🔄 Trying to sign in with existing user...");
+        
+        const { data: existingLogin, error: existingLoginError } = await supabase.auth.signInWithPassword({
+          email: "mili.kifleyesus@gmail.com",
+          password: "P@ssw0rd123!",
+        });
+        
+        if (existingLogin?.user) {
+          console.log("✅ Successfully signed in with existing user");
+          await supabase.auth.signOut();
+          return;
+        } else {
+          console.error("❌ Could not sign in with existing user:", existingLoginError);
+        }
+      }
       return;
     }
 
     if (authData.user) {
       console.log("✅ User account created:", authData.user.id);
-      console.log(
-        "📧 Email confirmation required:",
-        authData.user.email_confirmed_at ? "No" : "Yes"
-      );
+      console.log("📧 Email confirmed:", authData.user.email_confirmed_at ? "Yes" : "No");
 
       // Step 3: Create the profile with admin role
       console.log("3️⃣ Creating admin profile...");
@@ -76,66 +110,24 @@ export const setupAdminUser = async () => {
 
       if (profileError) {
         console.error("❌ Profile creation error:", profileError);
-
-        // Try to create profile with a new UUID
-        console.log("🔄 Trying to create profile with new UUID...");
-        await createAdminProfileOnly();
         return;
       }
 
       console.log("✅ Admin profile created:", profileData);
+      
+      // Sign out after creation
+      await supabase.auth.signOut();
+      
       console.log("🎉 Admin user setup complete!");
       console.log("==========================================");
       console.log("📧 Email: mili.kifleyesus@gmail.com");
       console.log("🔑 Password: P@ssw0rd123!");
       console.log("👤 Role: admin");
       console.log("==========================================");
-      console.log(
-        "⚠️  Note: If email confirmation is required, check your email first"
-      );
       console.log("💡 You can now try logging in!");
     }
   } catch (error) {
     console.error("❌ Setup error:", error);
-    console.log("🔄 Trying alternative approach...");
-    await createAdminProfileOnly();
-  }
-};
-
-/**
- * Alternative method to create admin profile when auth signup fails
- */
-const createAdminProfileOnly = async () => {
-  try {
-    console.log("🔄 Creating admin profile using alternative method...");
-
-    // Create a profile with a new UUID
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: crypto.randomUUID(), // Generate new UUID
-        email: "mili.kifleyesus@gmail.com",
-        full_name: "Admin User",
-        role: "admin",
-      })
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error("❌ Alternative profile creation failed:", profileError);
-      console.log("💡 You may need to run the database migration first");
-      return;
-    }
-
-    console.log(
-      "✅ Admin profile created with alternative method:",
-      profileData
-    );
-    console.log(
-      "⚠️  Note: You'll need to create the auth user manually or use email/password login"
-    );
-  } catch (error) {
-    console.error("❌ Alternative method failed:", error);
   }
 };
 
@@ -179,9 +171,11 @@ export const testAdminSetup = async () => {
 
     if (loginError) {
       console.error("❌ Login test failed:", loginError);
-      console.log("💡 This might be expected if the auth user wasn't created");
+      console.log("💡 Admin user needs to be created in Supabase auth system");
     } else {
       console.log("✅ Login test successful:", loginData.user?.id);
+      // Sign out after test
+      await supabase.auth.signOut();
     }
   } catch (error) {
     console.error("❌ Test failed:", error);
