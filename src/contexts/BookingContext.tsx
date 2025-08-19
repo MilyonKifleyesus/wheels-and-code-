@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { supabase } from "../lib/supabase";
+import supabase from "../utils/supabase";
 
 export interface Booking {
   id: number;
@@ -16,7 +16,7 @@ export interface Booking {
   vehicle: string;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "in-progress" | "completed" | "cancelled";
   notes?: string;
   estimatedCost?: number;
   actualCost?: number;
@@ -28,11 +28,11 @@ interface BookingContextType {
   bookings: Booking[];
   loading: boolean;
   error: string | null;
-  addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => void;
+  addBooking: (booking: Omit<Booking, "id" | "createdAt">) => void;
   updateBooking: (id: number, booking: Partial<Booking>) => void;
   deleteBooking: (id: number) => void;
   getBookingById: (id: number) => Booking | undefined;
-  updateBookingStatus: (id: number, status: Booking['status']) => void;
+  updateBookingStatus: (id: number, status: Booking["status"]) => void;
   refreshBookings: () => void;
 }
 
@@ -96,7 +96,9 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchBookings = async () => {
     console.log("📅 Starting booking fetch process...");
-    
+    setLoading(true);
+    setError(null);
+
     // Always start with sample data
     const sampleBookings = getSampleBookings();
     setBookings(sampleBookings);
@@ -106,7 +108,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
+
       if (!supabaseUrl || !supabaseKey) {
         console.log("⚠️ Supabase not configured, using sample data only");
         return;
@@ -116,7 +118,8 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
       // Note: Using the actual database schema columns
       const { data, error } = await supabase
         .from("bookings")
-        .select(`
+        .select(
+          `
           id,
           vehicle_info,
           booking_date,
@@ -127,11 +130,16 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
           actual_cost,
           assigned_staff,
           created_at
-        `)
+        `
+        )
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.warn("⚠️ Database booking fetch failed, keeping sample data:", error.message);
+        console.warn(
+          "⚠️ Database booking fetch failed, keeping sample data:",
+          error.message
+        );
+        setError(error.message);
         return;
       }
 
@@ -147,50 +155,60 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
           vehicle: dbBooking.vehicle_info,
           date: dbBooking.booking_date,
           time: dbBooking.booking_time,
-          status: dbBooking.status as Booking['status'],
+          status: dbBooking.status as Booking["status"],
           notes: dbBooking.notes || undefined,
           estimatedCost: dbBooking.estimated_cost || undefined,
           actualCost: dbBooking.actual_cost || undefined,
           assignedTechnician: dbBooking.assigned_staff || undefined,
           createdAt: dbBooking.created_at,
         }));
-        
+
         setBookings(convertedBookings);
       }
     } catch (err) {
       console.warn("⚠️ Database error, keeping sample data:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const addBooking = (bookingData: Omit<Booking, 'id' | 'createdAt'>) => {
+  const addBooking = (bookingData: Omit<Booking, "id" | "createdAt">) => {
     const newBooking: Booking = {
       ...bookingData,
       id: Date.now(),
       createdAt: new Date().toISOString(),
     };
 
-    setBookings(prev => [newBooking, ...prev]);
-    console.log("✅ Booking added:", newBooking.service, "for", newBooking.customerName);
+    setBookings((prev) => [newBooking, ...prev]);
+    console.log(
+      "✅ Booking added:",
+      newBooking.service,
+      "for",
+      newBooking.customerName
+    );
   };
 
   const updateBooking = (id: number, updates: Partial<Booking>) => {
-    setBookings(prev => prev.map(booking => 
-      booking.id === id ? { ...booking, ...updates } : booking
-    ));
+    setBookings((prev) =>
+      prev.map((booking) =>
+        booking.id === id ? { ...booking, ...updates } : booking
+      )
+    );
     console.log("✅ Booking updated:", id);
   };
 
   const deleteBooking = (id: number) => {
-    setBookings(prev => prev.filter(booking => booking.id !== id));
+    setBookings((prev) => prev.filter((booking) => booking.id !== id));
     console.log("✅ Booking deleted:", id);
   };
 
-  const updateBookingStatus = (id: number, status: Booking['status']) => {
+  const updateBookingStatus = (id: number, status: Booking["status"]) => {
     updateBooking(id, { status });
   };
 
   const getBookingById = (id: number) => {
-    return bookings.find(booking => booking.id === id);
+    return bookings.find((booking) => booking.id === id);
   };
 
   const refreshBookings = () => {
@@ -220,6 +238,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useBookings = () => {
   const context = useContext(BookingContext);
   if (context === undefined) {
@@ -228,4 +247,4 @@ export const useBookings = () => {
   return context;
 };
 
-export type { Booking };
+// Note: The Booking interface is already exported above

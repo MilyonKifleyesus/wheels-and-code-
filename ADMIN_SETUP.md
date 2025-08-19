@@ -15,7 +15,7 @@ You need to create the admin user in Supabase's authentication system. There are
 ## **Method 1: Use Supabase Dashboard (Recommended)**
 
 1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project: `otogefbrswdxyvvageop`
+2. Select your project: `dlisbapmpxcaittniqmm`
 3. Go to **Authentication** → **Users**
 4. Click **"Add user"**
 5. Fill in:
@@ -27,7 +27,7 @@ You need to create the admin user in Supabase's authentication system. There are
 ## **Method 2: Use the Setup Script**
 
 1. Go to your admin login page: `/admin`
-2. Press `F12` to open Developer Tools  
+2. Press `F12` to open Developer Tools
 3. Go to the **Console** tab
 4. Run this command:
 
@@ -49,6 +49,7 @@ After creating the user, try logging in with:
 ## **Why This Happens**
 
 The error occurs because:
+
 - Supabase requires users to exist in the `auth.users` table to authenticate
 - Previous setup only created a profile record, not an auth user
 - The `signInWithPassword` function checks against `auth.users`, not `profiles`
@@ -56,6 +57,7 @@ The error occurs because:
 ## **Verification**
 
 After creating the user, you should be able to:
+
 1. ✅ See the user in Supabase Dashboard → Authentication → Users
 2. ✅ Login successfully with the credentials
 3. ✅ Access the admin panel features

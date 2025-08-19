@@ -1,42 +1,98 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Singleton pattern to ensure only one Supabase client instance
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
 // Environment variable validation and testing
 const validateEnvironmentVariables = () => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  
+
   // Only log in development mode
   if (import.meta.env.DEV) {
     console.log("🔍 Environment Variable Check:");
     console.log("==========================================");
-    console.log("VITE_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing");
-    console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing");
+    console.log(
+      "VITE_SUPABASE_URL:",
+      supabaseUrl ? "✅ Present" : "❌ Missing"
+    );
+    console.log(
+      "VITE_SUPABASE_ANON_KEY:",
+      supabaseAnonKey ? "✅ Present" : "❌ Missing"
+    );
     console.log("Environment Mode:", import.meta.env.MODE);
   }
-  
+
   if (supabaseUrl) {
     if (import.meta.env.DEV) {
       console.log("URL Value:", supabaseUrl);
-      console.log("URL Format Valid:", supabaseUrl.includes('.supabase.co') ? "✅ Yes" : "❌ No");
+      console.log(
+        "URL Format Valid:",
+        supabaseUrl.includes(".supabase.co") ? "✅ Yes" : "❌ No"
+      );
     }
   }
-  
+
   if (supabaseAnonKey) {
     if (import.meta.env.DEV) {
       console.log("Key Length:", supabaseAnonKey.length);
-      console.log("Key Format Valid:", supabaseAnonKey.length > 50 ? "✅ Yes" : "❌ No");
+      console.log(
+        "Key Format Valid:",
+        supabaseAnonKey.length > 50 ? "✅ Yes" : "❌ No"
+      );
     }
   }
-  
+
   return { supabaseUrl, supabaseAnonKey };
 };
 
-// Run validation immediately
-const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables();
+// Get environment variables dynamically
+const getSupabaseConfig = () => {
+  return validateEnvironmentVariables();
+};
 
 // Create Supabase client with fallback handling
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = (() => {
+  // Force create new client every time in development
+  if (import.meta.env.DEV) {
+    console.log("🔧 DEV MODE: Force creating NEW Supabase client");
+    const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
+
+    if (supabaseUrl && supabaseAnonKey) {
+      console.log("🔧 Creating NEW Supabase client with URL:", supabaseUrl);
+      console.log("🔧 Timestamp:", new Date().toISOString());
+      return createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+        realtime: {
+          params: {
+            eventsPerSecond: 10,
+          },
+        },
+      });
+    } else {
+      console.warn(
+        "⚠️ Supabase client not initialized - missing environment variables"
+      );
+      return null;
+    }
+  }
+
+  // Production mode: use singleton
+  if (supabaseInstance) {
+    console.log("🔧 Reusing existing Supabase client instance");
+    return supabaseInstance;
+  }
+
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
+
+  if (supabaseUrl && supabaseAnonKey) {
+    console.log("🔧 Creating NEW Supabase client with URL:", supabaseUrl);
+    console.log("🔧 Timestamp:", new Date().toISOString());
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -47,11 +103,15 @@ export const supabase = supabaseUrl && supabaseAnonKey
           eventsPerSecond: 10,
         },
       },
-    })
-  : (() => {
-      console.warn("⚠️ Supabase client not initialized - missing environment variables");
-      return null;
-    })();
+    });
+    return supabaseInstance;
+  } else {
+    console.warn(
+      "⚠️ Supabase client not initialized - missing environment variables"
+    );
+    return null;
+  }
+})();
 
 // Safe wrapper for Supabase operations
 export const safeSupabaseCall = async <T>(
@@ -62,7 +122,7 @@ export const safeSupabaseCall = async <T>(
     console.warn("⚠️ Supabase not available, using fallback");
     return fallback;
   }
-  
+
   try {
     return await operation();
   } catch (error) {
@@ -74,27 +134,31 @@ export const safeSupabaseCall = async <T>(
 // Test connection function
 export const testSupabaseConnection = async () => {
   console.log("🧪 Testing Supabase Connection...");
-  
+
   if (!supabase) {
-    console.log("❌ Supabase client not initialized (missing environment variables)");
-    return { success: false, error: "Missing environment variables" };
+    console.log("❌ Supabase client not available");
+    return { success: false, error: "Client not available" };
   }
-  
+
   try {
     // Test auth connection (doesn't require RLS)
     const { data, error } = await supabase.auth.getSession();
-    
+
     if (error) {
       console.log("❌ Auth connection failed:", error.message);
       return { success: false, error: error.message };
     }
-    
+
     console.log("✅ Supabase connection successful!");
-    console.log("Session status:", data.session ? "Active session" : "No active session");
+    console.log(
+      "Session status:",
+      data.session ? "Active session" : "No active session"
+    );
     return { success: true, session: data.session };
-  } catch (err: any) {
-    console.log("❌ Connection test failed:", err.message);
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    console.log("❌ Connection test failed:", errorMessage);
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -105,19 +169,49 @@ if (supabase) {
 
 // Check if environment variables are properly configured
 export const isSupabaseConfigured = () => {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   return !!(supabaseUrl && supabaseAnonKey && supabase);
 };
 
 // Get configuration status for debugging
 export const getConfigurationStatus = () => {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   return {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseAnonKey,
     hasClient: !!supabase,
     urlValue: supabaseUrl,
     keyLength: supabaseAnonKey?.length || 0,
-    isConfigured: isSupabaseConfigured()
+    isConfigured: isSupabaseConfigured(),
   };
+};
+
+// Force recreate Supabase client (for debugging)
+export const forceRecreateClient = () => {
+  console.log("🔄 Force recreating Supabase client...");
+
+  // Clear the singleton instance
+  supabaseInstance = null;
+
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
+
+  if (supabaseUrl && supabaseAnonKey) {
+    console.log("🔧 Creating new client with URL:", supabaseUrl);
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
+    return supabaseInstance;
+  }
+  return null;
 };
 
 // Database types

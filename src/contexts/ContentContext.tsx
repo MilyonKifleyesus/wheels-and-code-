@@ -1,9 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import supabase from "../utils/supabase";
 
 export interface ContentSection {
   id: string;
-  type: 'hero' | 'services' | 'inventory' | 'testimonials' | 'contact' | 'about' | 'finance' | 'trust' | 'promo' | 'map';
+  type:
+    | "hero"
+    | "services"
+    | "inventory"
+    | "testimonials"
+    | "contact"
+    | "about"
+    | "finance"
+    | "trust"
+    | "promo"
+    | "map";
   title: string;
   visible: boolean;
   order: number;
@@ -25,10 +41,13 @@ interface ContentContextType {
   loading: boolean;
   error: string | null;
   updateSection: (id: string, updates: Partial<ContentSection>) => void;
-  updateSectionContent: (id: string, content: Partial<ContentSection['content']>) => void;
+  updateSectionContent: (
+    id: string,
+    content: Partial<ContentSection["content"]>
+  ) => void;
   toggleSectionVisibility: (id: string) => void;
   reorderSections: (sections: ContentSection[]) => void;
-  addSection: (section: Omit<ContentSection, 'id'>) => void;
+  addSection: (section: Omit<ContentSection, "id">) => void;
   deleteSection: (id: string) => void;
   getSectionById: (id: string) => ContentSection | undefined;
   getSectionByType: (type: string) => ContentSection | undefined;
@@ -41,116 +60,124 @@ const ContentContext = createContext<ContentContextType | undefined>(undefined);
 // Default content sections that always work
 const getDefaultSections = (): ContentSection[] => [
   {
-    id: 'hero',
-    type: 'hero',
-    title: 'Hero Section',
+    id: "hero",
+    type: "hero",
+    title: "Hero Section",
     visible: true,
     order: 1,
     content: {
-      heading: 'PRECISION PERFORMANCE PERFECTION',
-      subheading: 'Where automotive excellence meets cutting-edge service',
-      description: 'Experience the pinnacle of automotive luxury and performance',
-      buttonText: 'BROWSE CARS',
-      buttonLink: '/inventory',
-      backgroundColor: '#0B0B0C',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "PRECISION PERFORMANCE PERFECTION",
+      subheading: "Where automotive excellence meets cutting-edge service",
+      description:
+        "Experience the pinnacle of automotive luxury and performance",
+      buttonText: "BROWSE CARS",
+      buttonLink: "/inventory",
+      backgroundColor: "#0B0B0C",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'services',
-    type: 'services',
-    title: 'Services Section',
+    id: "services",
+    type: "services",
+    title: "Services Section",
     visible: true,
     order: 2,
     content: {
-      heading: 'PRECISION SERVICE',
-      description: 'Expert automotive service with state-of-the-art equipment and certified technicians',
-      backgroundColor: '#0B0B0C',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "PRECISION SERVICE",
+      description:
+        "Expert automotive service with state-of-the-art equipment and certified technicians",
+      backgroundColor: "#0B0B0C",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'inventory',
-    type: 'inventory',
-    title: 'Inventory Section',
+    id: "inventory",
+    type: "inventory",
+    title: "Inventory Section",
     visible: true,
     order: 3,
     content: {
-      heading: 'NEW ARRIVALS',
-      description: 'Latest additions to our premium collection',
-      backgroundColor: '#141518',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "NEW ARRIVALS",
+      description: "Latest additions to our premium collection",
+      backgroundColor: "#141518",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'trust',
-    type: 'trust',
-    title: 'Trust Section',
+    id: "trust",
+    type: "trust",
+    title: "Trust Section",
     visible: true,
     order: 4,
     content: {
-      heading: 'TRUSTED BY THOUSANDS',
-      description: 'Join thousands of satisfied customers who trust us with their automotive needs',
-      backgroundColor: '#0B0B0C',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "TRUSTED BY THOUSANDS",
+      description:
+        "Join thousands of satisfied customers who trust us with their automotive needs",
+      backgroundColor: "#0B0B0C",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'finance',
-    type: 'finance',
-    title: 'Finance Section',
+    id: "finance",
+    type: "finance",
+    title: "Finance Section",
     visible: true,
     order: 5,
     content: {
-      heading: 'FINANCE OPTIONS',
-      description: 'Get pre-qualified in minutes with competitive CAD rates and flexible terms',
-      backgroundColor: '#1A1B1E',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "FINANCE OPTIONS",
+      description:
+        "Get pre-qualified in minutes with competitive CAD rates and flexible terms",
+      backgroundColor: "#1A1B1E",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'promo',
-    type: 'promo',
-    title: 'Promo Section',
+    id: "promo",
+    type: "promo",
+    title: "Promo Section",
     visible: true,
     order: 6,
     content: {
-      heading: 'PERFORMANCE SERVICE SPECIAL',
-      description: 'Complete performance package including diagnostics, tune-up, and optimization',
-      backgroundColor: '#0B0B0C',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
+      heading: "PERFORMANCE SERVICE SPECIAL",
+      description:
+        "Complete performance package including diagnostics, tune-up, and optimization",
+      backgroundColor: "#0B0B0C",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
   },
   {
-    id: 'map',
-    type: 'map',
-    title: 'Map Section',
+    id: "map",
+    type: "map",
+    title: "Map Section",
     visible: true,
     order: 7,
     content: {
-      heading: 'VISIT US',
-      description: 'Experience our state-of-the-art facility and meet our expert team',
-      backgroundColor: '#1A1B1E',
-      textColor: '#FFFFFF',
-      accentColor: '#D7FF00'
-    }
-  }
+      heading: "VISIT US",
+      description:
+        "Experience our state-of-the-art facility and meet our expert team",
+      backgroundColor: "#1A1B1E",
+      textColor: "#FFFFFF",
+      accentColor: "#D7FF00",
+    },
+  },
 ];
 
-export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ContentProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [sections, setSections] = useState<ContentSection[]>([]);
   const [loading, setLoading] = useState(false); // Start with false
   const [error, setError] = useState<string | null>(null);
 
   const fetchSections = async () => {
     console.log("📄 Starting content fetch process...");
-    
+
     // Always start with default sections
     const defaultSections = getDefaultSections();
     setSections(defaultSections);
@@ -160,7 +187,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
+
       if (!supabaseUrl || !supabaseKey) {
         console.log("⚠️ Supabase not configured, using default content only");
         return;
@@ -168,27 +195,30 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       console.log("🔄 Attempting to fetch content from database...");
       const { data, error } = await supabase
-        .from('content_sections')
-        .select('*')
-        .order('sort_order', { ascending: true });
+        .from("content_sections")
+        .select("*")
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        console.warn("⚠️ Database content fetch failed, keeping defaults:", error.message);
+        console.warn(
+          "⚠️ Database content fetch failed, keeping defaults:",
+          error.message
+        );
         return;
       }
-      
+
       if (data && data.length > 0) {
         console.log("✅ Database content loaded:", data.length);
         // Convert database format to UI format
-        const convertedSections: ContentSection[] = data.map(dbSection => ({
+        const convertedSections: ContentSection[] = data.map((dbSection) => ({
           id: dbSection.id,
-          type: dbSection.section_type as ContentSection['type'],
+          type: dbSection.section_type as ContentSection["type"],
           title: dbSection.title,
           visible: dbSection.visible,
           order: dbSection.sort_order,
-          content: dbSection.content as ContentSection['content']
+          content: dbSection.content as ContentSection["content"],
         }));
-        
+
         setSections(convertedSections);
       }
     } catch (err) {
@@ -197,23 +227,34 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const updateSection = (id: string, updates: Partial<ContentSection>) => {
-    setSections(prev => prev.map(section => 
-      section.id === id ? { ...section, ...updates } : section
-    ));
+    setSections((prev) =>
+      prev.map((section) =>
+        section.id === id ? { ...section, ...updates } : section
+      )
+    );
     console.log("✅ Section updated:", id);
   };
 
-  const updateSectionContent = (id: string, content: Partial<ContentSection['content']>) => {
-    setSections(prev => prev.map(section => 
-      section.id === id ? { ...section, content: { ...section.content, ...content } } : section
-    ));
+  const updateSectionContent = (
+    id: string,
+    content: Partial<ContentSection["content"]>
+  ) => {
+    setSections((prev) =>
+      prev.map((section) =>
+        section.id === id
+          ? { ...section, content: { ...section.content, ...content } }
+          : section
+      )
+    );
     console.log("✅ Section content updated:", id);
   };
 
   const toggleSectionVisibility = (id: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === id ? { ...section, visible: !section.visible } : section
-    ));
+    setSections((prev) =>
+      prev.map((section) =>
+        section.id === id ? { ...section, visible: !section.visible } : section
+      )
+    );
     console.log("✅ Section visibility toggled:", id);
   };
 
@@ -222,30 +263,34 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     console.log("✅ Sections reordered");
   };
 
-  const addSection = (sectionData: Omit<ContentSection, 'id'>) => {
+  const addSection = (sectionData: Omit<ContentSection, "id">) => {
     const newSection: ContentSection = {
       ...sectionData,
       id: Date.now().toString(),
     };
-    setSections(prev => [...prev, newSection].sort((a, b) => a.order - b.order));
+    setSections((prev) =>
+      [...prev, newSection].sort((a, b) => a.order - b.order)
+    );
     console.log("✅ Section added:", newSection.title);
   };
 
   const deleteSection = (id: string) => {
-    setSections(prev => prev.filter(section => section.id !== id));
+    setSections((prev) => prev.filter((section) => section.id !== id));
     console.log("✅ Section deleted:", id);
   };
 
   const getSectionById = (id: string) => {
-    return sections.find(section => section.id === id);
+    return sections.find((section) => section.id === id);
   };
 
   const getSectionByType = (type: string) => {
-    return sections.find(section => section.type === type);
+    return sections.find((section) => section.type === type);
   };
 
   const getVisibleSections = () => {
-    return sections.filter(section => section.visible).sort((a, b) => a.order - b.order);
+    return sections
+      .filter((section) => section.visible)
+      .sort((a, b) => a.order - b.order);
   };
 
   const refreshSections = () => {
@@ -257,21 +302,23 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   return (
-    <ContentContext.Provider value={{
-      sections,
-      loading,
-      error,
-      updateSection,
-      updateSectionContent,
-      toggleSectionVisibility,
-      reorderSections,
-      addSection,
-      deleteSection,
-      getSectionById,
-      getSectionByType,
-      getVisibleSections,
-      refreshSections
-    }}>
+    <ContentContext.Provider
+      value={{
+        sections,
+        loading,
+        error,
+        updateSection,
+        updateSectionContent,
+        toggleSectionVisibility,
+        reorderSections,
+        addSection,
+        deleteSection,
+        getSectionById,
+        getSectionByType,
+        getVisibleSections,
+        refreshSections,
+      }}
+    >
       {children}
     </ContentContext.Provider>
   );
@@ -280,7 +327,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
 export const useContent = () => {
   const context = useContext(ContentContext);
   if (context === undefined) {
-    throw new Error('useContent must be used within a ContentProvider');
+    throw new Error("useContent must be used within a ContentProvider");
   }
   return context;
 };

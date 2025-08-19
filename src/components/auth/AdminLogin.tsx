@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Database, User, Mail } from "lucide-react";
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle,
+  Database,
+  User,
+  Mail,
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -33,23 +42,25 @@ const AdminLogin: React.FC = () => {
     // Check if Supabase is configured
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseKey) {
-      setError("Supabase environment variables not configured. Please check your .env file.");
+      setError(
+        "Supabase environment variables not configured. Please check your .env file."
+      );
       setIsSubmitting(false);
       return;
     }
 
     try {
       setSuccess("Signing in...");
-      
+
       const result = await signIn(email, password);
 
       if (result.success) {
         console.log("✅ Admin login successful!");
         setSuccess("Login successful! Redirecting...");
         setError("");
-        
+
         // Use router navigation instead of page reload
         setTimeout(() => {
           navigate("/admin", { replace: true });
@@ -99,31 +110,37 @@ const AdminLogin: React.FC = () => {
   const testConnection = async () => {
     setSuccess("Testing database connection...");
     setError("");
-    
+
     try {
-      const { testSupabaseConnection, getConfigurationStatus } = await import("../../lib/supabase");
-      
+      const { testSupabaseConnection, getConfigurationStatus } = await import(
+        "../../utils/supabase"
+      );
+
       // First check configuration
       const config = getConfigurationStatus();
       console.log("📊 Configuration Status:", config);
-      
+
       if (!config.isConfigured) {
         setError(`Environment variables not configured properly:
-        - URL: ${config.hasUrl ? '✅' : '❌'} 
-        - Key: ${config.hasKey ? '✅' : '❌'}
-        - Client: ${config.hasClient ? '✅' : '❌'}`);
+        - URL: ${config.hasUrl ? "✅" : "❌"} 
+        - Key: ${config.hasKey ? "✅" : "❌"}
+        - Client: ${config.hasClient ? "✅" : "❌"}`);
         setSuccess("");
         return;
       }
-      
+
       // Test connection
       const result = await testSupabaseConnection();
-      
+
       if (!result.success) {
         setError(`Database connection failed: ${result.error}`);
         setSuccess("");
       } else {
-        setSuccess(`✅ Database connection successful! ${result.session ? 'Active session found' : 'Ready for authentication'}`);
+        setSuccess(
+          `✅ Database connection successful! ${
+            result.session ? "Active session found" : "Ready for authentication"
+          }`
+        );
         setError("");
       }
     } catch (err: any) {
@@ -165,7 +182,10 @@ const AdminLogin: React.FC = () => {
 
             <form onSubmit={handleForgotPassword} className="space-y-6">
               <div>
-                <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="resetEmail"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Email Address
                 </label>
                 <input
@@ -230,7 +250,7 @@ const AdminLogin: React.FC = () => {
               <User className="w-4 h-4" />
               <span>Use Default Admin Credentials</span>
             </button>
-            
+
             <button
               type="button"
               onClick={testConnection}
@@ -241,7 +261,7 @@ const AdminLogin: React.FC = () => {
               <span>Test Database Connection</span>
             </button>
           </div>
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4 flex items-center space-x-3">
@@ -342,11 +362,19 @@ const AdminLogin: React.FC = () => {
 
           {/* Debug Info */}
           <div className="mt-6 p-4 bg-matte-black/50 border border-gray-700 rounded-lg">
-            <h4 className="text-gray-300 font-medium text-sm mb-2">Default Credentials:</h4>
+            <h4 className="text-gray-300 font-medium text-sm mb-2">
+              Default Credentials:
+            </h4>
             <div className="text-xs text-gray-400 space-y-1">
-              <p><strong>Email:</strong> mili.kifleyesus@gmail.com</p>
-              <p><strong>Password:</strong> P@ssw0rd123!</p>
-              <p className="text-acid-yellow mt-2">These credentials are pre-filled for testing</p>
+              <p>
+                <strong>Email:</strong> mili.kifleyesus@gmail.com
+              </p>
+              <p>
+                <strong>Password:</strong> P@ssw0rd123!
+              </p>
+              <p className="text-acid-yellow mt-2">
+                These credentials are pre-filled for testing
+              </p>
             </div>
           </div>
         </div>

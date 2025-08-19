@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { supabase } from "../lib/supabase";
+import supabase from "../utils/supabase";
 
 // Define Vehicle type to match what the UI expects
 export interface Vehicle {
@@ -54,7 +54,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 15000,
     vin: "WBA3B1C50DF123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 473, torque: 600, acceleration: "4.1s" },
     features: ["Premium Sound", "Navigation", "Heated Seats"],
     tags: ["NEW", "FEATURED"],
@@ -71,7 +73,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 8500,
     vin: "WDD2050461F123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 503, torque: 700, acceleration: "3.9s" },
     features: ["AMG Performance", "Premium Interior", "Sport Exhaust"],
     tags: ["PERFORMANCE"],
@@ -88,7 +92,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 2500,
     vin: "WP0AB2A99NS123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 640, torque: 800, acceleration: "2.7s" },
     features: ["Sport Chrono", "Carbon Fiber", "Premium Audio"],
     tags: ["NEW", "LUXURY"],
@@ -105,7 +111,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 1200,
     vin: "ZFF9A2A5000123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 710, torque: 770, acceleration: "2.9s" },
     features: ["Carbon Fiber", "Racing Seats", "Track Package"],
     tags: ["EXOTIC", "PERFORMANCE"],
@@ -122,7 +130,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 800,
     vin: "ZHWUC1ZF5NLA123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 630, torque: 600, acceleration: "3.2s" },
     features: ["All-Wheel Drive", "Carbon Package", "Sport Exhaust"],
     tags: ["NEW", "EXOTIC"],
@@ -139,7 +149,9 @@ const getSampleVehicles = (): Vehicle[] => [
     mileage: 12000,
     vin: "WAUZZZ4G5NN123456",
     status: "available",
-    images: ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
+    images: [
+      "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
     specs: { hp: 591, torque: 800, acceleration: "3.6s" },
     features: ["Quattro AWD", "Sport Differential", "Air Suspension"],
     tags: ["PERFORMANCE", "WAGON"],
@@ -158,7 +170,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchVehicles = async () => {
     console.log("🚗 Starting vehicle fetch process...");
-    
+
     // Always start with sample data to ensure UI works
     const sampleVehicles = getSampleVehicles();
     setVehicles(sampleVehicles);
@@ -168,7 +180,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
+
       if (!supabaseUrl || !supabaseKey) {
         console.log("⚠️ Supabase not configured, using sample data only");
         return;
@@ -181,7 +193,10 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.warn("⚠️ Database fetch failed, keeping sample data:", error.message);
+        console.warn(
+          "⚠️ Database fetch failed, keeping sample data:",
+          error.message
+        );
         return;
       }
 
@@ -205,32 +220,42 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({
       price: vehicleData.price || 0,
       mileage: vehicleData.mileage || 0,
       status: vehicleData.status || "available",
-      images: vehicleData.images || ["https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800"],
-      specs: vehicleData.specs || { hp: 300, torque: 400, acceleration: "5.0s" },
+      images: vehicleData.images || [
+        "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800",
+      ],
+      specs: vehicleData.specs || {
+        hp: 300,
+        torque: 400,
+        acceleration: "5.0s",
+      },
       features: vehicleData.features || [],
       tags: vehicleData.tags || [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    setVehicles(prev => [newVehicle, ...prev]);
+    setVehicles((prev) => [newVehicle, ...prev]);
     console.log("✅ Vehicle added:", newVehicle.make, newVehicle.model);
   };
 
   const updateVehicle = (id: string, updates: Partial<Vehicle>) => {
-    setVehicles(prev => prev.map(vehicle => 
-      vehicle.id === id ? { ...vehicle, ...updates, updated_at: new Date().toISOString() } : vehicle
-    ));
+    setVehicles((prev) =>
+      prev.map((vehicle) =>
+        vehicle.id === id
+          ? { ...vehicle, ...updates, updated_at: new Date().toISOString() }
+          : vehicle
+      )
+    );
     console.log("✅ Vehicle updated:", id);
   };
 
   const deleteVehicle = (id: string) => {
-    setVehicles(prev => prev.filter(vehicle => vehicle.id !== id));
+    setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
     console.log("✅ Vehicle deleted:", id);
   };
 
   const getVehicleById = (id: string) => {
-    return vehicles.find(vehicle => vehicle.id === id);
+    return vehicles.find((vehicle) => vehicle.id === id);
   };
 
   const refreshVehicles = () => {

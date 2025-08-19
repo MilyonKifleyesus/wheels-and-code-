@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import { VehicleProvider } from "./contexts/VehicleContext";
@@ -15,6 +14,7 @@ import BookingPage from "./pages/BookingPage";
 import RepairStatusPage from "./pages/RepairStatusPage";
 import ContactPage from "./pages/ContactPage";
 import AdminPage from "./pages/AdminPage";
+import TestPage from "./pages/TestPage.tsx";
 import "./styles/globals.css";
 
 function App() {
@@ -43,6 +43,7 @@ function App() {
                       />
                       <Route path="/contact" element={<ContactPage />} />
                       <Route path="/admin" element={<AdminPage />} />
+                      <Route path="/test" element={<TestPage />} />
                     </Routes>
                   </main>
                   <Footer />
