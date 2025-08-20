@@ -212,7 +212,7 @@ const AdminCrudTestPage: React.FC = () => {
             {sections.map(s => (
                 <div key={s.id} className="p-2 border-b border-gray-700 text-sm">
                     <p><b>{s.title}</b> (Type: {s.type})</p>
-                    <p className="text-gray-400">ID: {s.id} | Visible: {s.visible ? 'Yes' : 'No'} | Order: {s.order}</p>
+                    <p className="text-gray-400">ID: {s.id} | Visible: {s.visible ? 'Yes' : 'No'} | Order: {s.sort_order}</p>
                 </div>
             ))}
         </div>

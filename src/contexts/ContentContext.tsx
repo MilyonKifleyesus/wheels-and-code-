@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -22,7 +23,7 @@ export interface ContentSection {
     | "map";
   title: string;
   visible: boolean;
-  order: number;
+  sort_order: number;
   content: {
     heading?: string;
     subheading?: string;
@@ -34,21 +35,20 @@ export interface ContentSection {
     accentColor?: string;
     [key: string]: any;
   };
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface ContentContextType {
   sections: ContentSection[];
   loading: boolean;
   error: string | null;
-  updateSection: (id: string, updates: Partial<ContentSection>) => void;
-  updateSectionContent: (
-    id: string,
-    content: Partial<ContentSection["content"]>
-  ) => void;
-  toggleSectionVisibility: (id: string) => void;
-  reorderSections: (sections: ContentSection[]) => void;
-  addSection: (section: Omit<ContentSection, "id">) => void;
-  deleteSection: (id: string) => void;
+  updateSection: (id: string, updates: Partial<Omit<ContentSection, 'id' | 'created_at' | 'updated_at'>>) => Promise<{ success: boolean; error?: string }>;
+  updateSectionContent: (id: string, content: Partial<ContentSection["content"]>) => Promise<{ success: boolean; error?: string }>;
+  toggleSectionVisibility: (id: string, visible: boolean) => Promise<{ success: boolean; error?: string }>;
+  reorderSections: (sections: ContentSection[]) => Promise<{ success: boolean; error?: string }>;
+  addSection: (section: Omit<ContentSection, "id" | "created_at" | "updated_at">) => Promise<{ success: boolean; error?: string }>;
+  deleteSection: (id: string) => Promise<{ success: boolean; error?: string }>;
   getSectionById: (id: string) => ContentSection | undefined;
   getSectionByType: (type: string) => ContentSection | undefined;
   getVisibleSections: () => ContentSection[];
@@ -57,226 +57,155 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-// Default content sections that always work
-const getDefaultSections = (): ContentSection[] => [
-  {
-    id: "hero",
-    type: "hero",
-    title: "Hero Section",
-    visible: true,
-    order: 1,
-    content: {
-      heading: "PRECISION PERFORMANCE PERFECTION",
-      subheading: "Where automotive excellence meets cutting-edge service",
-      description:
-        "Experience the pinnacle of automotive luxury and performance",
-      buttonText: "BROWSE CARS",
-      buttonLink: "/inventory",
-      backgroundColor: "#0B0B0C",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "services",
-    type: "services",
-    title: "Services Section",
-    visible: true,
-    order: 2,
-    content: {
-      heading: "PRECISION SERVICE",
-      description:
-        "Expert automotive service with state-of-the-art equipment and certified technicians",
-      backgroundColor: "#0B0B0C",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "inventory",
-    type: "inventory",
-    title: "Inventory Section",
-    visible: true,
-    order: 3,
-    content: {
-      heading: "NEW ARRIVALS",
-      description: "Latest additions to our premium collection",
-      backgroundColor: "#141518",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "trust",
-    type: "trust",
-    title: "Trust Section",
-    visible: true,
-    order: 4,
-    content: {
-      heading: "TRUSTED BY THOUSANDS",
-      description:
-        "Join thousands of satisfied customers who trust us with their automotive needs",
-      backgroundColor: "#0B0B0C",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "finance",
-    type: "finance",
-    title: "Finance Section",
-    visible: true,
-    order: 5,
-    content: {
-      heading: "FINANCE OPTIONS",
-      description:
-        "Get pre-qualified in minutes with competitive CAD rates and flexible terms",
-      backgroundColor: "#1A1B1E",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "promo",
-    type: "promo",
-    title: "Promo Section",
-    visible: true,
-    order: 6,
-    content: {
-      heading: "PERFORMANCE SERVICE SPECIAL",
-      description:
-        "Complete performance package including diagnostics, tune-up, and optimization",
-      backgroundColor: "#0B0B0C",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-  {
-    id: "map",
-    type: "map",
-    title: "Map Section",
-    visible: true,
-    order: 7,
-    content: {
-      heading: "VISIT US",
-      description:
-        "Experience our state-of-the-art facility and meet our expert team",
-      backgroundColor: "#1A1B1E",
-      textColor: "#FFFFFF",
-      accentColor: "#D7FF00",
-    },
-  },
-];
-
 export const ContentProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [sections, setSections] = useState<ContentSection[]>([]);
-  const [loading, setLoading] = useState(false); // Start with false
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSections = async () => {
-    console.log("📄 Starting content fetch process...");
-
-    // Always start with default sections
-    const defaultSections = getDefaultSections();
-    setSections(defaultSections);
-    console.log("✅ Default content sections loaded:", defaultSections.length);
-
-    // Try to enhance with database data if available
+  const fetchSections = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseKey) {
-        console.log("⚠️ Supabase not configured, using default content only");
-        return;
+      if (!supabase) {
+        throw new Error("Supabase client is not available.");
       }
-
-      console.log("🔄 Attempting to fetch content from database...");
+      console.log("📄 Fetching content sections from database...");
       const { data, error } = await supabase
         .from("content_sections")
         .select("*")
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.warn(
-          "⚠️ Database content fetch failed, keeping defaults:",
-          error.message
-        );
-        return;
+        throw error;
       }
 
-      if (data && data.length > 0) {
-        console.log("✅ Database content loaded:", data.length);
-        // Convert database format to UI format
-        const convertedSections: ContentSection[] = data.map((dbSection) => ({
-          id: dbSection.id,
-          type: dbSection.section_type as ContentSection["type"],
-          title: dbSection.title,
-          visible: dbSection.visible,
-          order: dbSection.sort_order,
-          content: dbSection.content as ContentSection["content"],
-        }));
+      setSections(data || []);
+      console.log("✅ Content sections loaded:", data?.length || 0);
+    } catch (err: any) {
+      console.error("❌ Error fetching content sections:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-        setSections(convertedSections);
-      }
-    } catch (err) {
-      console.warn("⚠️ Database error, keeping default content:", err);
+  useEffect(() => {
+    fetchSections();
+  }, [fetchSections]);
+
+  const addSection = async (sectionData: Omit<ContentSection, "id" | "created_at" | "updated_at">) => {
+    try {
+      if (!supabase) throw new Error("Supabase not available");
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("content_sections")
+        .insert([sectionData])
+        .select();
+
+      if (error) throw error;
+      if (!data) throw new Error("No data returned after insert.");
+
+      console.log("✅ Section added successfully:", data[0]);
+      await fetchSections(); // Refresh data
+      return { success: true };
+    } catch (err: any) {
+      console.error("❌ Error adding section:", err);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateSection = (id: string, updates: Partial<ContentSection>) => {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.id === id ? { ...section, ...updates } : section
-      )
-    );
-    console.log("✅ Section updated:", id);
+  const updateSection = async (id: string, updates: Partial<Omit<ContentSection, 'id' | 'created_at' | 'updated_at'>>) => {
+    try {
+      if (!supabase) throw new Error("Supabase not available");
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("content_sections")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select();
+
+      if (error) throw error;
+      if (!data) throw new Error("No data returned after update.");
+
+      console.log("✅ Section updated successfully:", data[0]);
+      await fetchSections(); // Refresh data
+      return { success: true };
+    } catch (err: any) {
+      console.error("❌ Error updating section:", err);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateSectionContent = (
-    id: string,
-    content: Partial<ContentSection["content"]>
-  ) => {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.id === id
-          ? { ...section, content: { ...section.content, ...content } }
-          : section
-      )
-    );
-    console.log("✅ Section content updated:", id);
+  const deleteSection = async (id: string) => {
+    try {
+      if (!supabase) throw new Error("Supabase not available");
+      setLoading(true);
+      const { error } = await supabase
+        .from("content_sections")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      console.log("✅ Section deleted successfully:", id);
+      await fetchSections(); // Refresh data
+      return { success: true };
+    } catch (err: any) {
+      console.error("❌ Error deleting section:", err);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleSectionVisibility = (id: string) => {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.id === id ? { ...section, visible: !section.visible } : section
-      )
-    );
-    console.log("✅ Section visibility toggled:", id);
+  const updateSectionContent = async (id: string, contentUpdates: Partial<ContentSection["content"]>) => {
+    const section = sections.find(s => s.id === id);
+    if (!section) {
+      const errorMsg = "Section not found for content update.";
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    const newContent = { ...section.content, ...contentUpdates };
+    return updateSection(id, { content: newContent });
   };
 
-  const reorderSections = (newSections: ContentSection[]) => {
-    setSections(newSections);
-    console.log("✅ Sections reordered");
+  const toggleSectionVisibility = async (id: string, visible: boolean) => {
+    return updateSection(id, { visible });
   };
 
-  const addSection = (sectionData: Omit<ContentSection, "id">) => {
-    const newSection: ContentSection = {
-      ...sectionData,
-      id: Date.now().toString(),
-    };
-    setSections((prev) =>
-      [...prev, newSection].sort((a, b) => a.order - b.order)
-    );
-    console.log("✅ Section added:", newSection.title);
-  };
+  const reorderSections = async (newSections: ContentSection[]) => {
+    try {
+        if (!supabase) throw new Error("Supabase not available");
+        setLoading(true);
 
-  const deleteSection = (id: string) => {
-    setSections((prev) => prev.filter((section) => section.id !== id));
-    console.log("✅ Section deleted:", id);
+        const updates = newSections.map((section, index) => ({
+            id: section.id,
+            sort_order: index + 1,
+        }));
+
+        const { error } = await supabase.from('content_sections').upsert(updates);
+
+        if (error) throw error;
+
+        console.log("✅ Sections reordered successfully");
+        await fetchSections(); // Refresh data
+        return { success: true };
+    } catch (err: any) {
+        console.error("❌ Error reordering sections:", err);
+        setError(err.message);
+        return { success: false, error: err.message };
+    } finally {
+        setLoading(false);
+    }
   };
 
   const getSectionById = (id: string) => {
@@ -290,16 +219,12 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
   const getVisibleSections = () => {
     return sections
       .filter((section) => section.visible)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => a.sort_order - b.sort_order);
   };
 
   const refreshSections = () => {
     fetchSections();
   };
-
-  useEffect(() => {
-    fetchSections();
-  }, []);
 
   return (
     <ContentContext.Provider
