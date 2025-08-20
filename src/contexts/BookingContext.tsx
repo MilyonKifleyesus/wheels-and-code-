@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import supabase from "../utils/supabase";
+import { supabase } from "../lib/supabase";
 
 export interface Booking {
   id: number;

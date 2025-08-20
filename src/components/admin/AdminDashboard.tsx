@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useVehicles } from "../../contexts/VehicleContext";
 import { useBookings } from "../../contexts/BookingContext";
-import { getConfigurationStatus } from "../../utils/supabase";
+import { getConfigurationStatus } from "../../lib/supabase";
 
 const AdminDashboard: React.FC = () => {
   const { vehicles } = useVehicles();

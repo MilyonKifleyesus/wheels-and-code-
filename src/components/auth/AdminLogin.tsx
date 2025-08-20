@@ -113,7 +113,7 @@ const AdminLogin: React.FC = () => {
 
     try {
       const { testSupabaseConnection, getConfigurationStatus } = await import(
-        "../../utils/supabase"
+        "../../lib/supabase"
       );
 
       // First check configuration

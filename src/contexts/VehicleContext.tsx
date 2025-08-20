@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import supabase from "../utils/supabase";
+import { supabase } from "../lib/supabase";
 
 // Define Vehicle type to match what the UI expects
 export interface Vehicle {

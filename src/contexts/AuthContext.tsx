@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import supabase from "../utils/supabase";
+import { supabase } from "../lib/supabase";
 
 export interface User {
   id: string;

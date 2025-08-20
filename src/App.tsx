@@ -15,6 +15,7 @@ import RepairStatusPage from "./pages/RepairStatusPage";
 import ContactPage from "./pages/ContactPage";
 import AdminPage from "./pages/AdminPage";
 import TestPage from "./pages/TestPage.tsx";
+import AdminCrudTestPage from "./pages/AdminCrudTestPage";
 import "./styles/globals.css";
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
                       <Route path="/contact" element={<ContactPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/test" element={<TestPage />} />
+                      <Route path="/crud-test" element={<AdminCrudTestPage />} />
                     </Routes>
                   </main>
                   <Footer />
