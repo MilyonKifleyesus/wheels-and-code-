@@ -3,12 +3,14 @@ import { Save, Eye, Edit, Trash2, Plus, Image, Type, Layout, Upload, Palette, Se
 import Toast from '../ui/Toast';
 import { useContent, ContentSection } from '../../contexts/ContentContext';
 import { useDebounce } from '../../hooks/useDebounce';
+import { uploadImage } from '../../lib/storage';
 
 const ContentManager: React.FC = () => {
   const { 
     sections, 
     loading,
-    updateSection, 
+    updateSection,
+    updateSectionContent,
     reorderSections, 
     addSection, 
     deleteSection,
@@ -140,6 +142,29 @@ const ContentManager: React.FC = () => {
     setIsSubmitting(null);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    if (!editorState) {
+      showToastMessage('Please select a section first.', 'error');
+      return;
+    }
+    const file = e.target.files[0];
+
+    setIsSubmitting('image-upload');
+    showToastMessage('Uploading image...', 'success');
+    try {
+      const imageUrl = await uploadImage(file);
+      await updateSectionContent(editorState.id, { imageUrl });
+      showToastMessage('Image uploaded and saved!', 'success');
+    } catch (error: any) {
+      showToastMessage(`Image upload failed: ${error.message}`, 'error');
+    } finally {
+      setIsSubmitting(null);
+    }
+  };
+
   const handleEditorChange = (field: keyof Omit<ContentSection, 'id' | 'content'>, value: any) => {
     if (editorState) {
         setEditorState({ ...editorState, [field]: value });
@@ -253,6 +278,39 @@ const ContentManager: React.FC = () => {
                     <textarea value={editorState.content.description || ''} onChange={(e) => handleContentChange('description', e.target.value)} rows={3} className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300 resize-none"></textarea>
                   </div>
                 </div>
+
+                {editorState.type === 'hero' && (
+                  <div className="border-t border-gray-800 pt-6">
+                    <h4 className="text-white font-bold mb-4 flex items-center space-x-2">
+                      <Image className="w-5 h-5 text-acid-yellow" />
+                      <span>Hero Background Image</span>
+                    </h4>
+                    <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-acid-yellow transition-colors duration-300">
+                      {editorState.content.imageUrl ? (
+                        <img src={editorState.content.imageUrl} alt="Hero background preview" className="w-full h-auto rounded-md mb-4" />
+                      ) : (
+                        <div className="mb-4">
+                          <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                          <p className="text-gray-400 mt-2">No image uploaded</p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="bg-image-upload"
+                        disabled={isSubmitting === 'image-upload'}
+                      />
+                      <label
+                        htmlFor="bg-image-upload"
+                        className={`mt-4 inline-block bg-acid-yellow text-black px-4 py-2 rounded-sm font-medium cursor-pointer hover:bg-neon-lime transition-colors duration-300 ${isSubmitting === 'image-upload' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isSubmitting === 'image-upload' ? <div className="flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin"/> UPLOADING...</div> : 'CHOOSE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
