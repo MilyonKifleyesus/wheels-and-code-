@@ -8,9 +8,11 @@ import {
   Database,
   User,
   Mail,
+  Sprout,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { seedDatabase } from "../../lib/seed";
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("mili.kifleyesus@gmail.com");
@@ -149,6 +151,27 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  const handleSeedDatabase = async () => {
+    setSuccess("Attempting to seed database with default content...");
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const result = await seedDatabase();
+      if (result.success) {
+        setSuccess(result.message || "Database seeded successfully!");
+        setError("");
+      } else {
+        setError(result.error || "Failed to seed database.");
+        setSuccess("");
+      }
+    } catch (err: any) {
+      setError(`Seeding failed: ${err.message}`);
+      setSuccess("");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-matte-black flex items-center justify-center px-4">
@@ -259,6 +282,16 @@ const AdminLogin: React.FC = () => {
             >
               <Database className="w-4 h-4" />
               <span>Test Database Connection</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSeedDatabase}
+              disabled={isSubmitting}
+              className="w-full bg-green-600/10 border border-green-600/20 text-green-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-green-600/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              <Sprout className="w-4 h-4" />
+              <span>Seed Database with Default Content (Run Once)</span>
             </button>
           </div>
 
