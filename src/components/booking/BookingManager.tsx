@@ -25,7 +25,7 @@ const BookingManager: React.FC = () => {
     }
   };
 
-  const handleUpdateBookingStatus = (id: number, newStatus: Booking['status']) => {
+  const handleUpdateBookingStatus = (id: string, newStatus: Booking['status']) => {
     updateBookingStatus(id, newStatus);
     setToastMessage(`Booking status updated to ${newStatus}`);
     setToastType('success');
@@ -58,6 +58,7 @@ const BookingManager: React.FC = () => {
         vehicle: formData.get('vehicle') as string,
         date: formData.get('date') as string,
         time: formData.get('time') as string,
+        status: 'pending' as Booking['status'],
         notes: formData.get('notes') as string,
         estimatedCost: parseInt(formData.get('estimatedCost') as string) || 0
       };
@@ -124,7 +125,7 @@ const BookingManager: React.FC = () => {
     }
   };
 
-  const handleDeleteBooking = (id: number) => {
+  const handleDeleteBooking = (id: string) => {
     if (confirm('Are you sure you want to delete this booking?')) {
       try {
         deleteBooking(id);
@@ -632,7 +633,7 @@ const BookingManager: React.FC = () => {
               <div className="flex space-x-4">
                 <button
                   type="button"
-                  onClick={() => handleDeleteBooking(editingBooking.id)}
+                  onClick={() => handleDeleteBooking(editingBooking.id as string)}
                   className="bg-red-500 text-white px-4 py-3 rounded-sm font-medium hover:bg-red-600 transition-colors duration-300"
                 >
                   DELETE
