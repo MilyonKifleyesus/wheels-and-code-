@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   // Define fetchUserProfile first so it can be used in useEffect
   const fetchUserProfile = useCallback(
-    async (userId: string) => {
+    async (userId: string, userEmail?: string) => {
       try {
         if (!supabase) return;
 
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
           // If profile doesn't exist, create it automatically
           if (error.code === "PGRST116") {
-            console.log("🔄 Profile not found, creating admin profile...");
+            console.log("🔄 Profile not found, creating new profile...");
 
             // Try to create the profile, but handle the case where it might already exist
             const { data: newProfile, error: createError } = await supabase
@@ -138,9 +138,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
               .upsert(
                 {
                   id: userId,
-                  email: "mili.kifleyesus@gmail.com",
-                  full_name: "Admin User",
-                  role: "admin",
+                  email: userEmail,
+                  full_name: "New User",
+                  role: "customer",
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 },
@@ -182,8 +182,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                     .from("profiles")
                     .insert({
                       id: userId,
-                      email: "mili.kifleyesus@gmail.com",
-                      role: "admin",
+                      email: userEmail,
+                      role: "customer",
                     })
                     .select()
                     .single();
@@ -313,100 +313,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     let mounted = true;
 
-    const getInitialSession = async () => {
-      try {
-        console.log("🔐 Checking initial authentication state...");
-
-        // Check environment variables first
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-        // Immediate fallback if no environment variables
-        if (!supabaseUrl || !supabaseKey) {
-          console.log(
-            "⚠️ Supabase environment variables not configured - skipping session check"
-          );
-          if (mounted) setLoading(false);
-          return;
-        }
-
-        // Skip session check if supabase client is not available
-        if (!supabase) {
-          console.log(
-            "⚠️ Supabase client not available - skipping session check"
-          );
-          if (mounted) setLoading(false);
-          return;
-        }
-
-        // Simple session check without timeout race condition
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return; // Component unmounted, don't update state
-
-        if (error) {
-          console.error("❌ Session error:", error);
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (session?.user && mounted) {
-          console.log("✅ Found existing session for:", session.user.email);
-          setSessionPersisted(true);
-          await fetchUserProfile(session.user.id);
-        }
-
-        if (mounted) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("❌ Initial session error:", error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Set a safety timeout to ensure loading state is cleared
-    const safetyTimeout = setTimeout(() => {
-      if (mounted) {
-        console.log("⏰ Safety timeout reached, clearing loading state");
-        setLoading(false);
-      }
-    }, 10000); // Increased from 3s to 10s to allow for profile creation
-
-    getInitialSession().finally(() => clearTimeout(safetyTimeout));
-
-    // Listen for auth changes
-    let subscription: { unsubscribe: () => void } | null = null;
-    if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("🔐 Auth state changed:", event);
-
-          if (mounted) {
-            if (session?.user) {
-              setSessionPersisted(true);
-              await fetchUserProfile(session.user.id);
-            } else {
-              setUser(null);
-              setSessionPersisted(false);
-              setLoading(false);
-            }
-          }
-        }
-      );
-      subscription = data.subscription;
+    // Check for Supabase config once.
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey || !supabase) {
+      console.log("⚠️ Supabase not configured, skipping auth.");
+      setLoading(false);
+      return;
     }
+
+    // onAuthStateChange handles everything: initial session, sign in, sign out.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔐 Auth state changed:", event);
+
+      if (!mounted) return;
+
+      if (session?.user) {
+        setSessionPersisted(true);
+        // fetchUserProfile will set loading to false on its own.
+        await fetchUserProfile(session.user.id, session.user.email);
+      } else {
+        setUser(null);
+        setSessionPersisted(false);
+        setLoading(false); // Set loading false if no user.
+      }
+    });
 
     return () => {
       mounted = false;
-      clearTimeout(safetyTimeout);
       if (subscription) {
         subscription.unsubscribe();
       }
@@ -531,7 +467,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (data?.user) {
         console.log("✅ Sign in successful:", data.user.id);
         setLoginAttempts(0); // Reset on successful login
-        await fetchUserProfile(data.user.id);
+        await fetchUserProfile(data.user.id, data.user.email);
         setLoading(false);
         return { success: true };
       }
