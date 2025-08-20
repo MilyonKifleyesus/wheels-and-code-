@@ -24,6 +24,7 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const { signIn, resetPassword, loading } = useAuth();
+  const [seeding, setSeeding] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +150,31 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  const seedContent = async () => {
+    setSeeding(true);
+    setError("");
+    setSuccess("Seeding default homepage content...");
+    try {
+      const { seedDatabase } = await import("../../lib/contentSeed");
+      const result = await seedDatabase();
+      if (result.success) {
+        setSuccess(
+          result.alreadySeeded
+            ? "Content already seeded"
+            : "Seed completed successfully"
+        );
+      } else {
+        setError(result.message || "Seed failed");
+        setSuccess("");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Seed failed");
+      setSuccess("");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-matte-black flex items-center justify-center px-4">
@@ -259,6 +285,18 @@ const AdminLogin: React.FC = () => {
             >
               <Database className="w-4 h-4" />
               <span>Test Database Connection</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={seedContent}
+              disabled={isSubmitting || seeding}
+              className="w-full bg-green-600/10 border border-green-600/20 text-green-400 py-2 px-4 rounded-sm text-sm font-medium hover:bg-green-600/20 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              <Database className="w-4 h-4" />
+              <span>
+                {seeding ? "Seeding…" : "Seed Default Homepage Content"}
+              </span>
             </button>
           </div>
 

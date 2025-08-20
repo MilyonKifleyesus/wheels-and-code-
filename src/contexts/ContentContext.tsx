@@ -40,15 +40,19 @@ interface ContentContextType {
   sections: ContentSection[];
   loading: boolean;
   error: string | null;
-  updateSection: (id: string, updates: Partial<ContentSection>) => void;
+  saving: boolean;
+  updateSection: (
+    id: string,
+    updates: Partial<ContentSection>
+  ) => Promise<void>;
   updateSectionContent: (
     id: string,
     content: Partial<ContentSection["content"]>
-  ) => void;
-  toggleSectionVisibility: (id: string) => void;
-  reorderSections: (sections: ContentSection[]) => void;
-  addSection: (section: Omit<ContentSection, "id">) => void;
-  deleteSection: (id: string) => void;
+  ) => Promise<void>;
+  toggleSectionVisibility: (id: string) => Promise<void>;
+  reorderSections: (sections: ContentSection[]) => Promise<void>;
+  addSection: (section: Omit<ContentSection, "id">) => Promise<string | null>;
+  deleteSection: (id: string) => Promise<void>;
   getSectionById: (id: string) => ContentSection | undefined;
   getSectionByType: (type: string) => ContentSection | undefined;
   getVisibleSections: () => ContentSection[];
@@ -174,6 +178,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
   const [sections, setSections] = useState<ContentSection[]>([]);
   const [loading, setLoading] = useState(false); // Start with false
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchSections = async () => {
     console.log("📄 Starting content fetch process...");
@@ -185,6 +190,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
 
     // Try to enhance with database data if available
     try {
+      setLoading(true);
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -204,6 +210,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
           "⚠️ Database content fetch failed, keeping defaults:",
           error.message
         );
+        setError(error.message);
         return;
       }
 
@@ -223,19 +230,45 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
       }
     } catch (err) {
       console.warn("⚠️ Database error, keeping default content:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateSection = (id: string, updates: Partial<ContentSection>) => {
+  const updateSection = async (
+    id: string,
+    updates: Partial<ContentSection>
+  ) => {
     setSections((prev) =>
       prev.map((section) =>
         section.id === id ? { ...section, ...updates } : section
       )
     );
     console.log("✅ Section updated:", id);
+
+    try {
+      if (!supabase) return;
+      setSaving(true);
+      const { error } = await supabase
+        .from("content_sections")
+        .update({
+          section_type: updates.type,
+          title: updates.title,
+          visible: updates.visible,
+          sort_order: updates.order,
+          content: updates.content,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    } catch (err) {
+      console.warn("⚠️ Failed to persist section update:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const updateSectionContent = (
+  const updateSectionContent = async (
     id: string,
     content: Partial<ContentSection["content"]>
   ) => {
@@ -247,36 +280,140 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
       )
     );
     console.log("✅ Section content updated:", id);
+
+    try {
+      if (!supabase) return;
+      setSaving(true);
+      const target = sections.find((s) => s.id === id);
+      const mergedContent = { ...(target?.content || {}), ...content };
+      const { error } = await supabase
+        .from("content_sections")
+        .update({ content: mergedContent })
+        .eq("id", id);
+      if (error) throw error;
+    } catch (err) {
+      console.warn("⚠️ Failed to persist section content update:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleSectionVisibility = (id: string) => {
+  const toggleSectionVisibility = async (id: string) => {
+    const target = sections.find((s) => s.id === id);
+    const nextVisible = !target?.visible;
     setSections((prev) =>
       prev.map((section) =>
-        section.id === id ? { ...section, visible: !section.visible } : section
+        section.id === id ? { ...section, visible: !!nextVisible } : section
       )
     );
     console.log("✅ Section visibility toggled:", id);
+
+    try {
+      if (!supabase) return;
+      setSaving(true);
+      const { error } = await supabase
+        .from("content_sections")
+        .update({ visible: nextVisible })
+        .eq("id", id);
+      if (error) throw error;
+    } catch (err) {
+      console.warn("⚠️ Failed to persist visibility:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const reorderSections = (newSections: ContentSection[]) => {
+  const reorderSections = async (newSections: ContentSection[]) => {
     setSections(newSections);
     console.log("✅ Sections reordered");
+
+    try {
+      if (!supabase) return;
+      setSaving(true);
+      // Persist sort_order changes in batch
+      const updates = newSections.map((s, idx) => ({
+        id: s.id,
+        sort_order: idx + 1,
+      }));
+      // Update one-by-one to avoid needing PostgREST bulk RPC
+      for (const u of updates) {
+        const { error } = await supabase
+          .from("content_sections")
+          .update({ sort_order: u.sort_order })
+          .eq("id", u.id);
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.warn("⚠️ Failed to persist reorder:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const addSection = (sectionData: Omit<ContentSection, "id">) => {
+  const addSection = async (
+    sectionData: Omit<ContentSection, "id">
+  ): Promise<string | null> => {
+    const tempId = `temp-${Date.now()}`;
     const newSection: ContentSection = {
       ...sectionData,
-      id: Date.now().toString(),
+      id: tempId,
     };
     setSections((prev) =>
       [...prev, newSection].sort((a, b) => a.order - b.order)
     );
-    console.log("✅ Section added:", newSection.title);
+    console.log("✅ Section added (optimistic):", newSection.title);
+
+    try {
+      if (!supabase) return null;
+      setSaving(true);
+      const { data, error } = await supabase
+        .from("content_sections")
+        .insert({
+          section_type: sectionData.type,
+          title: sectionData.title,
+          visible: sectionData.visible,
+          sort_order: sectionData.order,
+          content: sectionData.content,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      if (data?.id) {
+        setSections((prev) =>
+          prev.map((s) => (s.id === tempId ? { ...s, id: data.id } : s))
+        );
+        return data.id as string;
+      }
+      return null;
+    } catch (err) {
+      console.warn("⚠️ Failed to persist add:", err);
+      // rollback
+      setSections((prev) => prev.filter((s) => s.id !== tempId));
+      return null;
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const deleteSection = (id: string) => {
+  const deleteSection = async (id: string) => {
+    const snapshot = sections;
     setSections((prev) => prev.filter((section) => section.id !== id));
-    console.log("✅ Section deleted:", id);
+    console.log("✅ Section deleted (optimistic):", id);
+
+    try {
+      if (!supabase) return;
+      setSaving(true);
+      const { error } = await supabase
+        .from("content_sections")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    } catch (err) {
+      console.warn("⚠️ Failed to persist delete, rolling back:", err);
+      setSections(snapshot);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getSectionById = (id: string) => {
@@ -307,6 +444,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({
         sections,
         loading,
         error,
+        saving,
         updateSection,
         updateSectionContent,
         toggleSectionVisibility,

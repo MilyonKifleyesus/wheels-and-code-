@@ -130,31 +130,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
           // If profile doesn't exist, create it automatically
           if (error.code === "PGRST116") {
-<<<<<<< Updated upstream
-            console.log("🔄 Profile not found, creating new profile...");
-=======
             console.log(
               "🔄 Profile not found, creating profile for authenticated user..."
             );
 
-            // Get the authenticated user's details to populate email/role
-            const { data: authUserData, error: authUserError } =
-              await supabase.auth.getUser();
-            if (authUserError || !authUserData?.user) {
-              console.error(
-                "❌ Failed to get authenticated user for profile creation",
-                authUserError
-              );
-              await supabase.auth.signOut();
-              setLoading(false);
-              setIsFetchingProfile(false);
-              return;
+            // Determine email and default role
+            let authedEmail = userEmail ?? "";
+            if (!authedEmail) {
+              const { data: authUserData } = await supabase.auth.getUser();
+              authedEmail = authUserData?.user?.email ?? "";
             }
-
-            const authedEmail = authUserData.user.email || "";
             const isAdminEmail =
               authedEmail.toLowerCase() === "mili.kifleyesus@gmail.com";
->>>>>>> Stashed changes
 
             // Try to create the profile, but handle the case where it might already exist
             const { data: newProfile, error: createError } = await supabase
@@ -162,21 +149,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
               .upsert(
                 {
                   id: userId,
-<<<<<<< Updated upstream
-                  email: userEmail,
-                  full_name: "New User",
-                  role: "customer",
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-=======
                   email: authedEmail,
                   full_name: isAdminEmail ? "Admin User" : null,
                   role: isAdminEmail ? "admin" : "customer",
->>>>>>> Stashed changes
                 },
-                {
-                  onConflict: "id",
-                }
+                { onConflict: "id" }
               )
               .select()
               .single();
@@ -212,13 +189,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                     .from("profiles")
                     .insert({
                       id: userId,
-<<<<<<< Updated upstream
-                      email: userEmail,
-                      role: "customer",
-=======
                       email: authedEmail,
                       role: isAdminEmail ? "admin" : "customer",
->>>>>>> Stashed changes
                     })
                     .select()
                     .single();
@@ -358,21 +330,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     // onAuthStateChange handles everything: initial session, sign in, sign out.
+    // Debounce rapid auth events to avoid race conditions during token refresh
+    let lastEventAt = 0;
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔐 Auth state changed:", event);
+      const now = Date.now();
+      if (now - lastEventAt < 250) {
+        // Ignore bursts of events within 250ms
+        return;
+      }
+      lastEventAt = now;
 
+      console.log("🔐 Auth state changed:", event);
       if (!mounted) return;
 
       if (session?.user) {
         setSessionPersisted(true);
-        // fetchUserProfile will set loading to false on its own.
         await fetchUserProfile(session.user.id, session.user.email);
       } else {
         setUser(null);
         setSessionPersisted(false);
-        setLoading(false); // Set loading false if no user.
+        setLoading(false);
       }
     });
 

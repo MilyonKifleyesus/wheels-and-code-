@@ -1,108 +1,128 @@
-import React, { useState } from 'react';
-import { Save, Eye, Edit, Trash2, Plus, Image, Type, Layout, Upload, Palette, Settings } from 'lucide-react';
-import Toast from '../ui/Toast';
-import { useContent, ContentSection } from '../../contexts/ContentContext';
+import React, { useState } from "react";
+import {
+  Save,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  Image,
+  Type,
+  Layout,
+  Upload,
+  Palette,
+  Settings,
+} from "lucide-react";
+import Toast from "../ui/Toast";
+import { useContent, ContentSection } from "../../contexts/ContentContext";
+import { useDebounce } from "../../hooks/useDebounce";
 
 const ContentManager: React.FC = () => {
-  const { 
-    sections, 
-    updateSection, 
-    updateSectionContent, 
-    toggleSectionVisibility, 
-    reorderSections, 
-    addSection, 
-    deleteSection 
+  const {
+    sections,
+    updateSection,
+    updateSectionContent,
+    toggleSectionVisibility,
+    reorderSections,
+    addSection,
+    deleteSection,
+    saving,
   } = useContent();
 
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
-  const [selectedSection, setSelectedSection] = useState<ContentSection | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [selectedSection, setSelectedSection] = useState<ContentSection | null>(
+    null
+  );
   const [previewMode, setPreviewMode] = useState(false);
 
-  const moveSection = (id: string, direction: 'up' | 'down') => {
-    const sectionIndex = sections.findIndex(s => s.id === id);
+  const moveSection = (id: string, direction: "up" | "down") => {
+    const sectionIndex = sections.findIndex((s) => s.id === id);
     if (
-      (direction === 'up' && sectionIndex > 0) ||
-      (direction === 'down' && sectionIndex < sections.length - 1)
+      (direction === "up" && sectionIndex > 0) ||
+      (direction === "down" && sectionIndex < sections.length - 1)
     ) {
       const newSections = [...sections];
-      const targetIndex = direction === 'up' ? sectionIndex - 1 : sectionIndex + 1;
-      [newSections[sectionIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[sectionIndex]];
-      
-      reorderSections(newSections);
-      setToastMessage('Section order updated successfully!');
-      setToastType('success');
+      const targetIndex =
+        direction === "up" ? sectionIndex - 1 : sectionIndex + 1;
+      [newSections[sectionIndex], newSections[targetIndex]] = [
+        newSections[targetIndex],
+        newSections[sectionIndex],
+      ];
+      // Recompute order numbers
+      const reindexed = newSections.map((s, idx) => ({ ...s, order: idx + 1 }));
+      reorderSections(reindexed);
+      setToastMessage("Section order updated successfully!");
+      setToastType("success");
       setShowToast(true);
     }
   };
 
-  const handleUpdateSectionContent = (sectionId: string, updates: Partial<ContentSection['content']>) => {
-    updateSectionContent(sectionId, updates);
-    
+  const debouncedUpdateSectionContent = useDebounce(updateSectionContent, 600);
+  const debouncedUpdateSection = useDebounce(updateSection, 600);
+
+  const handleUpdateSectionContent = (
+    sectionId: string,
+    updates: Partial<ContentSection["content"]>
+  ) => {
+    debouncedUpdateSectionContent(sectionId, updates);
+
     // Update selectedSection if it's the one being edited
     if (selectedSection && selectedSection.id === sectionId) {
-      setSelectedSection(prev => ({
+      setSelectedSection((prev) => ({
         ...prev!,
-        content: { ...prev!.content, ...updates }
+        content: { ...prev!.content, ...updates },
       }));
     }
-    
-    setToastMessage('Content updated successfully!');
-    setToastType('success');
-    setShowToast(true);
+
+    // Quiet autosave; avoid frequent toasts
   };
 
-  const handleAddNewSection = () => {
-    const newSection: Omit<ContentSection, 'id'> = {
-      type: 'about',
-      title: 'New Section',
+  const handleAddNewSection = async () => {
+    const newSection: Omit<ContentSection, "id"> = {
+      type: "about",
+      title: "New Section",
       visible: true,
       order: sections.length + 1,
       content: {
-        heading: 'New Section',
-        description: 'Add your content here',
-        backgroundColor: '#0B0B0C',
-        textColor: '#FFFFFF',
-        accentColor: '#D7FF00'
-      }
+        heading: "New Section",
+        description: "Add your content here",
+        backgroundColor: "#0B0B0C",
+        textColor: "#FFFFFF",
+        accentColor: "#D7FF00",
+      },
     };
-    addSection(newSection);
-    setToastMessage('New section added successfully!');
-    setToastType('success');
+    await addSection(newSection);
+    setToastMessage("New section added");
+    setToastType("success");
     setShowToast(true);
   };
 
   const handleDeleteSection = (id: string) => {
-    if (confirm('Are you sure you want to delete this section?')) {
+    if (confirm("Are you sure you want to delete this section?")) {
       deleteSection(id);
       if (selectedSection?.id === id) {
         setSelectedSection(null);
       }
-      setToastMessage('Section deleted successfully!');
-      setToastType('success');
+      setToastMessage("Section deleted successfully!");
+      setToastType("success");
       setShowToast(true);
     }
   };
 
   const handleToggleVisibility = (id: string) => {
     toggleSectionVisibility(id);
-    setToastMessage('Section visibility updated successfully!');
-    setToastType('success');
-    setShowToast(true);
   };
 
-  const saveAllChanges = () => {
-    setToastMessage('All changes saved successfully! Website updated.');
-    setToastType('success');
-    setShowToast(true);
-  };
+  const saveAllChanges = () => {};
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setToastMessage('Image upload feature would be implemented with cloud storage');
-      setToastType('success');
+      setToastMessage(
+        "Image upload feature would be implemented with cloud storage"
+      );
+      setToastType("success");
       setShowToast(true);
     }
   };
@@ -119,23 +139,21 @@ const ContentManager: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-white">Website Builder</h2>
-          <p className="text-gray-400 mt-1">Customize your website content and appearance</p>
+          <p className="text-gray-400 mt-1">
+            Customize your website content and appearance
+          </p>
         </div>
         <div className="flex space-x-3">
-          <button 
+          <button
             onClick={() => setPreviewMode(!previewMode)}
             className="bg-blue-600 text-white px-4 py-2 rounded-sm font-medium hover:bg-blue-700 transition-colors duration-300 flex items-center space-x-2"
           >
             <Eye className="w-4 h-4" />
-            <span>{previewMode ? 'EDIT MODE' : 'PREVIEW'}</span>
+            <span>{previewMode ? "EDIT MODE" : "PREVIEW"}</span>
           </button>
-          <button 
-            onClick={saveAllChanges}
-            className="bg-acid-yellow text-black px-4 py-2 rounded-sm font-bold hover:bg-neon-lime transition-colors duration-300 flex items-center space-x-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>PUBLISH CHANGES</span>
-          </button>
+          <div className="px-3 py-2 rounded-sm text-xs font-medium border border-gray-700 text-gray-400">
+            {saving ? "Saving…" : "All changes saved"}
+          </div>
         </div>
       </div>
 
@@ -143,7 +161,9 @@ const ContentManager: React.FC = () => {
         {/* Section List */}
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-white font-bold tracking-wider">PAGE SECTIONS</h3>
+            <h3 className="text-white font-bold tracking-wider">
+              PAGE SECTIONS
+            </h3>
             <button
               onClick={handleAddNewSection}
               className="bg-white/10 text-white p-2 rounded-sm hover:bg-white/20 transition-colors duration-300"
@@ -152,13 +172,15 @@ const ContentManager: React.FC = () => {
               <Plus className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="space-y-3">
             {sections.map((section) => (
               <div
                 key={section.id}
                 className={`bg-dark-graphite border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
-                  selectedSection?.id === section.id ? 'border-acid-yellow' : 'border-gray-800 hover:border-gray-700'
+                  selectedSection?.id === section.id
+                    ? "border-acid-yellow"
+                    : "border-gray-800 hover:border-gray-700"
                 }`}
                 onClick={() => setSelectedSection(section)}
               >
@@ -168,7 +190,7 @@ const ContentManager: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        moveSection(section.id, 'up');
+                        moveSection(section.id, "up");
                       }}
                       className="text-gray-400 hover:text-white text-xs"
                       disabled={section.order === 1}
@@ -178,7 +200,7 @@ const ContentManager: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        moveSection(section.id, 'down');
+                        moveSection(section.id, "down");
                       }}
                       className="text-gray-400 hover:text-white text-xs"
                       disabled={section.order === sections.length}
@@ -196,10 +218,14 @@ const ContentManager: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm ${section.visible ? 'text-green-400' : 'text-red-400'}`}>
-                    {section.visible ? 'Visible' : 'Hidden'}
+                  <span
+                    className={`text-sm ${
+                      section.visible ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
+                    {section.visible ? "Visible" : "Hidden"}
                   </span>
                   <button
                     onClick={(e) => {
@@ -207,12 +233,12 @@ const ContentManager: React.FC = () => {
                       handleToggleVisibility(section.id);
                     }}
                     className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors duration-300 ${
-                      section.visible 
-                        ? 'bg-green-600 text-white hover:bg-green-700' 
-                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                      section.visible
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-600 text-white hover:bg-gray-700"
                     }`}
                   >
-                    {section.visible ? 'HIDE' : 'SHOW'}
+                    {section.visible ? "HIDE" : "SHOW"}
                   </button>
                 </div>
               </div>
@@ -225,7 +251,9 @@ const ContentManager: React.FC = () => {
           {selectedSection ? (
             <div className="bg-dark-graphite border border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white">Edit: {selectedSection.title}</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Edit: {selectedSection.title}
+                </h3>
                 <div className="flex space-x-2">
                   <button className="p-2 bg-white/10 text-white rounded-sm hover:bg-white/20 transition-colors duration-300">
                     <Layout className="w-4 h-4" />
@@ -246,26 +274,41 @@ const ContentManager: React.FC = () => {
                 {/* Section Settings */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2">Section Title</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                      Section Title
+                    </label>
                     <input
                       type="text"
                       value={selectedSection.title}
                       onChange={(e) => {
                         const newTitle = e.target.value;
-                        setSelectedSection(prev => ({ ...prev!, title: newTitle }));
-                        updateSection(selectedSection.id, { title: newTitle });
+                        setSelectedSection((prev) => ({
+                          ...prev!,
+                          title: newTitle,
+                        }));
+                        debouncedUpdateSection(selectedSection.id, {
+                          title: newTitle,
+                        });
                       }}
                       className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2">Section Type</label>
-                    <select 
+                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                      Section Type
+                    </label>
+                    <select
                       value={selectedSection.type}
                       onChange={(e) => {
-                        const newType = e.target.value as ContentSection['type'];
-                        setSelectedSection(prev => ({ ...prev!, type: newType }));
-                        updateSection(selectedSection.id, { type: newType });
+                        const newType = e.target
+                          .value as ContentSection["type"];
+                        setSelectedSection((prev) => ({
+                          ...prev!,
+                          type: newType,
+                        }));
+                        debouncedUpdateSection(selectedSection.id, {
+                          type: newType,
+                        });
                       }}
                       className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                     >
@@ -286,13 +329,17 @@ const ContentManager: React.FC = () => {
                 {/* Content Editor */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2">Heading</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                      Heading
+                    </label>
                     <input
                       type="text"
-                      value={selectedSection.content.heading || ''}
+                      value={selectedSection.content.heading || ""}
                       onChange={(e) => {
                         const newHeading = e.target.value;
-                        handleUpdateSectionContent(selectedSection.id, { heading: newHeading });
+                        handleUpdateSectionContent(selectedSection.id, {
+                          heading: newHeading,
+                        });
                       }}
                       className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                       placeholder="Section heading"
@@ -300,13 +347,17 @@ const ContentManager: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2">Subheading</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                      Subheading
+                    </label>
                     <input
                       type="text"
-                      value={selectedSection.content.subheading || ''}
+                      value={selectedSection.content.subheading || ""}
                       onChange={(e) => {
                         const newSubheading = e.target.value;
-                        handleUpdateSectionContent(selectedSection.id, { subheading: newSubheading });
+                        handleUpdateSectionContent(selectedSection.id, {
+                          subheading: newSubheading,
+                        });
                       }}
                       className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                       placeholder="Section subheading"
@@ -314,12 +365,16 @@ const ContentManager: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm font-medium mb-2">Description</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                      Description
+                    </label>
                     <textarea
-                      value={selectedSection.content.description || ''}
+                      value={selectedSection.content.description || ""}
                       onChange={(e) => {
                         const newDescription = e.target.value;
-                        handleUpdateSectionContent(selectedSection.id, { description: newDescription });
+                        handleUpdateSectionContent(selectedSection.id, {
+                          description: newDescription,
+                        });
                       }}
                       rows={3}
                       className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300 resize-none"
@@ -329,21 +384,33 @@ const ContentManager: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-400 text-sm font-medium mb-2">Button Text</label>
+                      <label className="block text-gray-400 text-sm font-medium mb-2">
+                        Button Text
+                      </label>
                       <input
                         type="text"
-                        value={selectedSection.content.buttonText || ''}
-                        onChange={(e) => handleUpdateSectionContent(selectedSection.id, { buttonText: e.target.value })}
+                        value={selectedSection.content.buttonText || ""}
+                        onChange={(e) =>
+                          handleUpdateSectionContent(selectedSection.id, {
+                            buttonText: e.target.value,
+                          })
+                        }
                         className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                         placeholder="Button text"
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm font-medium mb-2">Button Link</label>
+                      <label className="block text-gray-400 text-sm font-medium mb-2">
+                        Button Link
+                      </label>
                       <input
                         type="text"
-                        value={selectedSection.content.buttonLink || ''}
-                        onChange={(e) => handleUpdateSectionContent(selectedSection.id, { buttonLink: e.target.value })}
+                        value={selectedSection.content.buttonLink || ""}
+                        onChange={(e) =>
+                          handleUpdateSectionContent(selectedSection.id, {
+                            buttonLink: e.target.value,
+                          })
+                        }
                         className="w-full bg-matte-black border border-gray-700 text-white rounded-sm px-4 py-3 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                         placeholder="/page-url"
                       />
@@ -356,52 +423,90 @@ const ContentManager: React.FC = () => {
                   <h4 className="text-white font-bold mb-4">STYLING OPTIONS</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-gray-400 text-sm font-medium mb-2">Background Color</label>
+                      <label className="block text-gray-400 text-sm font-medium mb-2">
+                        Background Color
+                      </label>
                       <div className="flex items-center space-x-2">
                         <input
                           type="color"
-                          value={selectedSection.content.backgroundColor || '#0B0B0C'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { backgroundColor: e.target.value })}
+                          value={
+                            selectedSection.content.backgroundColor || "#0B0B0C"
+                          }
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              backgroundColor: e.target.value,
+                            })
+                          }
                           className="w-12 h-10 bg-matte-black border border-gray-700 rounded-sm"
                         />
                         <input
                           type="text"
-                          value={selectedSection.content.backgroundColor || '#0B0B0C'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { backgroundColor: e.target.value })}
+                          value={
+                            selectedSection.content.backgroundColor || "#0B0B0C"
+                          }
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              backgroundColor: e.target.value,
+                            })
+                          }
                           className="flex-1 bg-matte-black border border-gray-700 text-white rounded-sm px-3 py-2 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm font-medium mb-2">Text Color</label>
+                      <label className="block text-gray-400 text-sm font-medium mb-2">
+                        Text Color
+                      </label>
                       <div className="flex items-center space-x-2">
                         <input
                           type="color"
-                          value={selectedSection.content.textColor || '#FFFFFF'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { textColor: e.target.value })}
+                          value={selectedSection.content.textColor || "#FFFFFF"}
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              textColor: e.target.value,
+                            })
+                          }
                           className="w-12 h-10 bg-matte-black border border-gray-700 rounded-sm"
                         />
                         <input
                           type="text"
-                          value={selectedSection.content.textColor || '#FFFFFF'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { textColor: e.target.value })}
+                          value={selectedSection.content.textColor || "#FFFFFF"}
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              textColor: e.target.value,
+                            })
+                          }
                           className="flex-1 bg-matte-black border border-gray-700 text-white rounded-sm px-3 py-2 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm font-medium mb-2">Accent Color</label>
+                      <label className="block text-gray-400 text-sm font-medium mb-2">
+                        Accent Color
+                      </label>
                       <div className="flex items-center space-x-2">
                         <input
                           type="color"
-                          value={selectedSection.content.accentColor || '#D7FF00'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { accentColor: e.target.value })}
+                          value={
+                            selectedSection.content.accentColor || "#D7FF00"
+                          }
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              accentColor: e.target.value,
+                            })
+                          }
                           className="w-12 h-10 bg-matte-black border border-gray-700 rounded-sm"
                         />
                         <input
                           type="text"
-                          value={selectedSection.content.accentColor || '#D7FF00'}
-                          onChange={(e) => handleUpdateSectionContent(selectedSection.id, { accentColor: e.target.value })}
+                          value={
+                            selectedSection.content.accentColor || "#D7FF00"
+                          }
+                          onChange={(e) =>
+                            handleUpdateSectionContent(selectedSection.id, {
+                              accentColor: e.target.value,
+                            })
+                          }
                           className="flex-1 bg-matte-black border border-gray-700 text-white rounded-sm px-3 py-2 focus:border-acid-yellow focus:outline-none transition-colors duration-300"
                         />
                       </div>
@@ -411,11 +516,15 @@ const ContentManager: React.FC = () => {
 
                 {/* Background Image Upload */}
                 <div className="border-t border-gray-800 pt-6">
-                  <h4 className="text-white font-bold mb-4">BACKGROUND IMAGE</h4>
+                  <h4 className="text-white font-bold mb-4">
+                    BACKGROUND IMAGE
+                  </h4>
                   <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-acid-yellow transition-colors duration-300">
                     <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-400">Upload background image</p>
-                    <p className="text-gray-500 text-sm mt-2">PNG, JPG up to 5MB</p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      PNG, JPG up to 5MB
+                    </p>
                     <input
                       type="file"
                       accept="image/*"
@@ -435,26 +544,38 @@ const ContentManager: React.FC = () => {
                 {/* Preview */}
                 <div className="border-t border-gray-800 pt-6">
                   <h4 className="text-white font-bold mb-4">PREVIEW</h4>
-                  <div 
+                  <div
                     className="p-8 rounded-lg border border-gray-700"
-                    style={{ 
-                      backgroundColor: selectedSection.content.backgroundColor || '#0B0B0C',
-                      color: selectedSection.content.textColor || '#FFFFFF'
+                    style={{
+                      backgroundColor:
+                        selectedSection.content.backgroundColor || "#0B0B0C",
+                      color: selectedSection.content.textColor || "#FFFFFF",
                     }}
                   >
-                    <h2 className="text-2xl font-bold mb-2" style={{ color: selectedSection.content.accentColor || '#D7FF00' }}>
-                      {selectedSection.content.heading || 'Section Heading'}
+                    <h2
+                      className="text-2xl font-bold mb-2"
+                      style={{
+                        color: selectedSection.content.accentColor || "#D7FF00",
+                      }}
+                    >
+                      {selectedSection.content.heading || "Section Heading"}
                     </h2>
                     {selectedSection.content.subheading && (
-                      <h3 className="text-lg mb-4">{selectedSection.content.subheading}</h3>
+                      <h3 className="text-lg mb-4">
+                        {selectedSection.content.subheading}
+                      </h3>
                     )}
-                    <p className="mb-4">{selectedSection.content.description || 'Section description'}</p>
+                    <p className="mb-4">
+                      {selectedSection.content.description ||
+                        "Section description"}
+                    </p>
                     {selectedSection.content.buttonText && (
-                      <button 
+                      <button
                         className="px-6 py-2 rounded-sm font-bold"
-                        style={{ 
-                          backgroundColor: selectedSection.content.accentColor || '#D7FF00',
-                          color: '#000000'
+                        style={{
+                          backgroundColor:
+                            selectedSection.content.accentColor || "#D7FF00",
+                          color: "#000000",
                         }}
                       >
                         {selectedSection.content.buttonText}
@@ -467,8 +588,13 @@ const ContentManager: React.FC = () => {
           ) : (
             <div className="bg-dark-graphite border border-gray-800 rounded-lg p-12 text-center">
               <Layout className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-white font-bold mb-2">Select a Section to Edit</h3>
-              <p className="text-gray-400">Choose a section from the left panel to customize its content and appearance</p>
+              <h3 className="text-white font-bold mb-2">
+                Select a Section to Edit
+              </h3>
+              <p className="text-gray-400">
+                Choose a section from the left panel to customize its content
+                and appearance
+              </p>
             </div>
           )}
         </div>
