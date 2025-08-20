@@ -130,7 +130,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
           // If profile doesn't exist, create it automatically
           if (error.code === "PGRST116") {
+<<<<<<< Updated upstream
             console.log("🔄 Profile not found, creating new profile...");
+=======
+            console.log(
+              "🔄 Profile not found, creating profile for authenticated user..."
+            );
+
+            // Get the authenticated user's details to populate email/role
+            const { data: authUserData, error: authUserError } =
+              await supabase.auth.getUser();
+            if (authUserError || !authUserData?.user) {
+              console.error(
+                "❌ Failed to get authenticated user for profile creation",
+                authUserError
+              );
+              await supabase.auth.signOut();
+              setLoading(false);
+              setIsFetchingProfile(false);
+              return;
+            }
+
+            const authedEmail = authUserData.user.email || "";
+            const isAdminEmail =
+              authedEmail.toLowerCase() === "mili.kifleyesus@gmail.com";
+>>>>>>> Stashed changes
 
             // Try to create the profile, but handle the case where it might already exist
             const { data: newProfile, error: createError } = await supabase
@@ -138,11 +162,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
               .upsert(
                 {
                   id: userId,
+<<<<<<< Updated upstream
                   email: userEmail,
                   full_name: "New User",
                   role: "customer",
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
+=======
+                  email: authedEmail,
+                  full_name: isAdminEmail ? "Admin User" : null,
+                  role: isAdminEmail ? "admin" : "customer",
+>>>>>>> Stashed changes
                 },
                 {
                   onConflict: "id",
@@ -182,8 +212,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                     .from("profiles")
                     .insert({
                       id: userId,
+<<<<<<< Updated upstream
                       email: userEmail,
                       role: "customer",
+=======
+                      email: authedEmail,
+                      role: isAdminEmail ? "admin" : "customer",
+>>>>>>> Stashed changes
                     })
                     .select()
                     .single();
