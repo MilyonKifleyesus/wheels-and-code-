@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useRef,
 } from "react";
 import supabase from "../utils/supabase";
 
@@ -103,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [sessionPersisted, setSessionPersisted] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lastLoginAttempt, setLastLoginAttempt] = useState<number>(0);
-  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+  const isFetchingProfile = useRef(false);
 
   // Define fetchUserProfile first so it can be used in useEffect
   const fetchUserProfile = useCallback(
@@ -112,12 +113,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (!supabase) return;
 
         // Prevent multiple simultaneous profile fetches
-        if (isFetchingProfile) {
+        if (isFetchingProfile.current) {
           console.log("⚠️ Profile fetch already in progress, skipping...");
           return;
         }
 
-        setIsFetchingProfile(true);
+        isFetchingProfile.current = true;
         console.log("👤 Fetching user profile for:", userId);
         const { data, error } = await supabase
           .from("profiles")
@@ -194,7 +195,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                   );
                   await supabase.auth.signOut();
                   setLoading(false);
-                  setIsFetchingProfile(false);
+                  isFetchingProfile.current = false;
                   return;
                 }
 
@@ -206,7 +207,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                   );
                   await supabase.auth.signOut();
                   setLoading(false);
-                  setIsFetchingProfile(false);
+                  isFetchingProfile.current = false;
                   return;
                 }
 
@@ -216,7 +217,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                   minimalProfile.email
                 );
                 setLoading(false);
-                setIsFetchingProfile(false);
+                isFetchingProfile.current = false;
                 return;
               }
 
@@ -228,7 +229,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 );
                 await supabase.auth.signOut();
                 setLoading(false);
-                setIsFetchingProfile(false);
+                isFetchingProfile.current = false;
                 return;
               }
 
@@ -240,7 +241,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 retryProfile.role
               );
               setLoading(false);
-              setIsFetchingProfile(false);
+              isFetchingProfile.current = false;
               return;
             }
 
@@ -252,7 +253,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 );
                 await supabase.auth.signOut();
                 setLoading(false);
-                setIsFetchingProfile(false);
+                isFetchingProfile.current = false;
                 return;
               }
 
@@ -264,7 +265,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 newProfile.role
               );
               setLoading(false);
-              setIsFetchingProfile(false);
+              isFetchingProfile.current = false;
               return;
             }
           }
@@ -273,7 +274,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           console.error("❌ Critical profile error, signing out:", error);
           await supabase.auth.signOut();
           setLoading(false);
-          setIsFetchingProfile(false);
+          isFetchingProfile.current = false;
           return;
         }
 
@@ -283,7 +284,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             console.error("❌ Failed to create user profile from fetched data");
             await supabase.auth.signOut();
             setLoading(false);
-            setIsFetchingProfile(false);
+            isFetchingProfile.current = false;
             return;
           }
 
@@ -304,15 +305,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         }
         setLoading(false);
       } finally {
-        setIsFetchingProfile(false);
+        isFetchingProfile.current = false;
       }
     },
-    [isFetchingProfile]
+    []
   );
 
   useEffect(() => {
-    let mounted = true;
-
     // Check for Supabase config once.
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -322,13 +321,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
+    // Safety timeout to prevent loading state from getting stuck.
+    const safetyTimeout = setTimeout(() => {
+      console.log("⏰ Safety timeout reached, clearing loading state");
+      setLoading(false);
+    }, 10000); // 10-second timeout
+
     // onAuthStateChange handles everything: initial session, sign in, sign out.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      clearTimeout(safetyTimeout); // Clear the timeout as we have a response.
       console.log("🔐 Auth state changed:", event);
-
-      if (!mounted) return;
 
       if (session?.user) {
         setSessionPersisted(true);
@@ -342,7 +346,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     return () => {
-      mounted = false;
+      clearTimeout(safetyTimeout);
       if (subscription) {
         subscription.unsubscribe();
       }
