@@ -9,6 +9,14 @@ import {
   Layout,
   LogOut,
   User,
+  Palette,
+  Image,
+  Zap,
+  Target,
+  Gift,
+  TestTube,
+  Clock,
+  Layers
 } from "lucide-react";
 import AdminDashboard from "../components/admin/AdminDashboard";
 import InventoryManager from "../components/inventory/InventoryManager";
@@ -17,6 +25,15 @@ import CustomerManager from "../components/admin/CustomerManager";
 import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
 import ContentManager from "../components/admin/ContentManager";
 import SystemSettings from "../components/admin/SystemSettings";
+import TemplateManager from "../components/admin/TemplateManager";
+import DesignTokenManager from "../components/admin/DesignTokenManager";
+import MediaLibrary from "../components/admin/MediaLibrary";
+import FormBuilder from "../components/admin/FormBuilder";
+import AdvancedAnalytics from "../components/admin/AdvancedAnalytics";
+import PromotionsEngine from "../components/admin/PromotionsEngine";
+import ABTestManager from "../components/admin/ABTestManager";
+import ConditionalDisplay from "../components/admin/ConditionalDisplay";
+import ContentScheduler from "../components/admin/ContentScheduler";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -27,10 +44,19 @@ const AdminPage: React.FC = () => {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "content", label: "Website Builder", icon: Layout },
+    { id: "templates", label: "Templates", icon: FileText },
+    { id: "design-tokens", label: "Design System", icon: Palette },
+    { id: "media", label: "Media Library", icon: Image },
+    { id: "forms", label: "Form Builder", icon: Zap },
     { id: "inventory", label: "Inventory", icon: Car },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "customers", label: "Customers", icon: Users },
     { id: "analytics", label: "Analytics", icon: FileText },
+    { id: "advanced-analytics", label: "Advanced Analytics", icon: Target },
+    { id: "promotions", label: "Promotions", icon: Gift },
+    { id: "ab-testing", label: "A/B Testing", icon: TestTube },
+    { id: "conditional", label: "Conditional Display", icon: Layers },
+    { id: "scheduler", label: "Content Scheduler", icon: Clock },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -40,6 +66,14 @@ const AdminPage: React.FC = () => {
         return <AdminDashboard />;
       case "content":
         return <ContentManager />;
+      case "templates":
+        return <TemplateManager />;
+      case "design-tokens":
+        return <DesignTokenManager />;
+      case "media":
+        return <MediaLibrary />;
+      case "forms":
+        return <FormBuilder />;
       case "inventory":
         return <InventoryManager />;
       case "bookings":
@@ -48,6 +82,16 @@ const AdminPage: React.FC = () => {
         return <CustomerManager />;
       case "analytics":
         return <AnalyticsDashboard />;
+      case "advanced-analytics":
+        return <AdvancedAnalytics />;
+      case "promotions":
+        return <PromotionsEngine />;
+      case "ab-testing":
+        return <ABTestManager />;
+      case "conditional":
+        return <ConditionalDisplay />;
+      case "scheduler":
+        return <ContentScheduler />;
       case "settings":
         return <SystemSettings />;
       default:
