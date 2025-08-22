@@ -5,6 +5,7 @@ import { BookingProvider } from "./contexts/BookingContext";
 import { ContentProvider } from "./contexts/ContentContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { AnalyticsProvider } from "./contexts/AnalyticsContext";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import HomePage from "./pages/HomePage";
@@ -27,32 +28,34 @@ function App() {
           <VehicleProvider>
             <BookingProvider>
               <ContentProvider>
-                <Router>
-                  <div className="min-h-screen bg-black text-white overflow-x-hidden">
-                    <Header />
-                    <main>
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/inventory" element={<InventoryPage />} />
-                        <Route path="/services" element={<ServicesPage />} />
-                        <Route
-                          path="/vehicle/:id"
-                          element={<VehicleDetailPage />}
-                        />
-                        <Route path="/book" element={<BookingPage />} />
-                        <Route
-                          path="/repair-status"
-                          element={<RepairStatusPage />}
-                        />
-                        <Route path="/contact" element={<ContactPage />} />
-                        <Route path="/admin" element={<AdminPage />} />
-                        <Route path="/test" element={<TestPage />} />
-                        <Route path="/crud-test" element={<AdminCrudTestPage />} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                  </div>
-                </Router>
+                <AnalyticsProvider>
+                  <Router>
+                    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+                      <Header />
+                      <main>
+                        <Routes>
+                          <Route path="/" element={<HomePage />} />
+                          <Route path="/inventory" element={<InventoryPage />} />
+                          <Route path="/services" element={<ServicesPage />} />
+                          <Route
+                            path="/vehicle/:id"
+                            element={<VehicleDetailPage />}
+                          />
+                          <Route path="/book" element={<BookingPage />} />
+                          <Route
+                            path="/repair-status"
+                            element={<RepairStatusPage />}
+                          />
+                          <Route path="/contact" element={<ContactPage />} />
+                          <Route path="/admin" element={<AdminPage />} />
+                          <Route path="/test" element={<TestPage />} />
+                          <Route path="/crud-test" element={<AdminCrudTestPage />} />
+                        </Routes>
+                      </main>
+                      <Footer />
+                    </div>
+                  </Router>
+                </AnalyticsProvider>
               </ContentProvider>
             </BookingProvider>
           </VehicleProvider>
