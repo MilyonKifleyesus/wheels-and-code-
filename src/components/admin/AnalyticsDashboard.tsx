@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, DollarSign, Users, Car, Calendar, BarChart3, PieChart, Activity, Download, Filter, RefreshCw } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Car, Calendar, BarChart3, PieChart, Activity, Download, Filter, RefreshCw, Target, Zap } from 'lucide-react';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { useBookings } from '../../contexts/BookingContext';
 import Toast from '../ui/Toast';
@@ -12,6 +12,8 @@ const AnalyticsDashboard: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [showAttributionPanel, setShowAttributionPanel] = useState(false);
+  const [showFunnelAnalysis, setShowFunnelAnalysis] = useState(false);
 
   // Calculate real metrics from actual data
   const availableVehicles = vehicles.filter(v => v.status === 'available').length;
@@ -156,6 +158,20 @@ const AnalyticsDashboard: React.FC = () => {
           >
             <RefreshCw className="w-4 h-4" />
             <span>REFRESH</span>
+          </button>
+          <button
+            onClick={() => setShowAttributionPanel(!showAttributionPanel)}
+            className="bg-purple-600 text-white px-4 py-2 rounded-sm font-medium hover:bg-purple-700 transition-colors duration-300 flex items-center space-x-2"
+          >
+            <Target className="w-4 h-4" />
+            <span>ATTRIBUTION</span>
+          </button>
+          <button
+            onClick={() => setShowFunnelAnalysis(!showFunnelAnalysis)}
+            className="bg-orange-600 text-white px-4 py-2 rounded-sm font-medium hover:bg-orange-700 transition-colors duration-300 flex items-center space-x-2"
+          >
+            <Zap className="w-4 h-4" />
+            <span>FUNNELS</span>
           </button>
           <button
             onClick={exportData}

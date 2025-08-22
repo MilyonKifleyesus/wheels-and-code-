@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Eye, Edit, Trash2, Plus, Image, Type, Layout, Upload, Palette, Settings } from 'lucide-react';
+import { Save, Eye, Edit, Trash2, Plus, Image, Type, Layout, Upload, Palette, Settings, Clock, Target, Calendar } from 'lucide-react';
 import Toast from '../ui/Toast';
 import { useContent, ContentSection } from '../../contexts/ContentContext';
 
@@ -19,6 +19,8 @@ const ContentManager: React.FC = () => {
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [selectedSection, setSelectedSection] = useState<ContentSection | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [showConditionalRules, setShowConditionalRules] = useState(false);
 
   const moveSection = (id: string, direction: 'up' | 'down') => {
     const sectionIndex = sections.findIndex(s => s.id === id);
@@ -128,6 +130,20 @@ const ContentManager: React.FC = () => {
           >
             <Eye className="w-4 h-4" />
             <span>{previewMode ? 'EDIT MODE' : 'PREVIEW'}</span>
+          </button>
+          <button 
+            onClick={() => setShowScheduler(!showScheduler)}
+            className="bg-purple-600 text-white px-4 py-2 rounded-sm font-medium hover:bg-purple-700 transition-colors duration-300 flex items-center space-x-2"
+          >
+            <Clock className="w-4 h-4" />
+            <span>SCHEDULE</span>
+          </button>
+          <button 
+            onClick={() => setShowConditionalRules(!showConditionalRules)}
+            className="bg-orange-600 text-white px-4 py-2 rounded-sm font-medium hover:bg-orange-700 transition-colors duration-300 flex items-center space-x-2"
+          >
+            <Target className="w-4 h-4" />
+            <span>RULES</span>
           </button>
           <button 
             onClick={saveAllChanges}

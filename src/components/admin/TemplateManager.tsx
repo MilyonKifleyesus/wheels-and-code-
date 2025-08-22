@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Copy, Trash2, Plus, Layout, Eye, Edit, Download, Upload } from 'lucide-react';
+import { Save, Copy, Trash2, Plus, Layout, Eye, Edit, Download, Upload, Grid, List } from 'lucide-react';
 import Toast from '../ui/Toast';
 
 interface Template {
@@ -25,6 +25,7 @@ const TemplateManager: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const [templates, setTemplates] = useState<Template[]>([
     {
@@ -207,6 +208,24 @@ const TemplateManager: React.FC = () => {
           <p className="text-gray-400 mt-1">Create and manage reusable page templates and content blocks</p>
         </div>
         <div className="flex space-x-3">
+          <div className="flex border border-gray-700 rounded-sm overflow-hidden">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-3 transition-colors duration-300 ${
+                viewMode === 'grid' ? 'bg-acid-yellow text-black' : 'bg-matte-black text-white hover:bg-gray-800'
+              }`}
+            >
+              <Grid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-3 transition-colors duration-300 ${
+                viewMode === 'list' ? 'bg-acid-yellow text-black' : 'bg-matte-black text-white hover:bg-gray-800'
+              }`}
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
           <input
             type="file"
             accept=".json"

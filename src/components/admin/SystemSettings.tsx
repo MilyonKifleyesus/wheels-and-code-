@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Upload, Download, Shield, Bell, Globe, Palette, Database, Check } from 'lucide-react';
+import { Save, Upload, Download, Shield, Bell, Globe, Palette, Database, Check, Users, Lock, Eye } from 'lucide-react';
 import Toast from '../ui/Toast';
 
 const SystemSettings: React.FC = () => {
@@ -30,6 +30,7 @@ const SystemSettings: React.FC = () => {
   const tabs = [
     { id: 'general', label: 'General', icon: Globe },
     { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'roles', label: 'Roles & Permissions', icon: Users },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'backup', label: 'Backup', icon: Database },
@@ -300,6 +301,64 @@ const SystemSettings: React.FC = () => {
                   >
                     Sample Button
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === 'roles' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white mb-6">Roles & Permissions</h3>
+              
+              <div className="space-y-4">
+                {[
+                  { role: 'Owner', permissions: ['Full Access', 'User Management', 'Billing'], users: 1 },
+                  { role: 'Admin', permissions: ['Content Management', 'Analytics', 'Settings'], users: 2 },
+                  { role: 'Editor', permissions: ['Content Creation', 'Media Library'], users: 3 },
+                  { role: 'Contributor', permissions: ['Content Creation'], users: 5 }
+                ].map((roleData) => (
+                  <div key={roleData.role} className="bg-matte-black border border-gray-700 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-white font-bold">{roleData.role}</h4>
+                        <p className="text-gray-400 text-sm">{roleData.users} user(s)</p>
+                      </div>
+                      <button className="bg-white/10 text-white px-4 py-2 rounded-sm font-medium hover:bg-white/20 transition-colors duration-300">
+                        EDIT ROLE
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {roleData.permissions.map((permission) => (
+                        <span key={permission} className="px-3 py-1 bg-acid-yellow/20 text-acid-yellow text-sm rounded-sm">
+                          {permission}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-matte-black border border-gray-700 rounded-lg p-6">
+                <h4 className="text-white font-bold mb-4">Page-Level Permissions</h4>
+                <div className="space-y-3">
+                  {[
+                    { page: 'Homepage', editors: ['Admin', 'Editor'], viewers: ['All'] },
+                    { page: 'Inventory', editors: ['Admin'], viewers: ['All'] },
+                    { page: 'Admin Panel', editors: ['Owner'], viewers: ['Owner', 'Admin'] }
+                  ].map((pageData) => (
+                    <div key={pageData.page} className="flex items-center justify-between p-3 bg-dark-graphite rounded-sm">
+                      <span className="text-white font-medium">{pageData.page}</span>
+                      <div className="flex space-x-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Edit: </span>
+                          <span className="text-white">{pageData.editors.join(', ')}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">View: </span>
+                          <span className="text-white">{pageData.viewers.join(', ')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

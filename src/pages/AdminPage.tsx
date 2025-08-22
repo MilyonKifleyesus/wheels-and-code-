@@ -34,6 +34,11 @@ import PromotionsEngine from "../components/admin/PromotionsEngine";
 import ABTestManager from "../components/admin/ABTestManager";
 import ConditionalDisplay from "../components/admin/ConditionalDisplay";
 import ContentScheduler from "../components/admin/ContentScheduler";
+import ReusableBlocks from "../components/admin/ReusableBlocks";
+import SEOManager from "../components/admin/SEOManager";
+import AutomationEngine from "../components/admin/AutomationEngine";
+import PersonalizationEngine from "../components/admin/PersonalizationEngine";
+import BackupManager from "../components/admin/BackupManager";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -45,6 +50,7 @@ const AdminPage: React.FC = () => {
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "content", label: "Website Builder", icon: Layout },
     { id: "templates", label: "Templates", icon: FileText },
+    { id: "blocks", label: "Reusable Blocks", icon: Layers },
     { id: "design-tokens", label: "Design System", icon: Palette },
     { id: "media", label: "Media Library", icon: Image },
     { id: "forms", label: "Form Builder", icon: Zap },
@@ -57,6 +63,10 @@ const AdminPage: React.FC = () => {
     { id: "ab-testing", label: "A/B Testing", icon: TestTube },
     { id: "conditional", label: "Conditional Display", icon: Layers },
     { id: "scheduler", label: "Content Scheduler", icon: Clock },
+    { id: "seo", label: "SEO Manager", icon: Search },
+    { id: "automations", label: "Automations", icon: Zap },
+    { id: "personalization", label: "Personalization", icon: Target },
+    { id: "backup", label: "Backup & Health", icon: Shield },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -68,6 +78,8 @@ const AdminPage: React.FC = () => {
         return <ContentManager />;
       case "templates":
         return <TemplateManager />;
+      case "blocks":
+        return <ReusableBlocks />;
       case "design-tokens":
         return <DesignTokenManager />;
       case "media":
@@ -92,6 +104,14 @@ const AdminPage: React.FC = () => {
         return <ConditionalDisplay />;
       case "scheduler":
         return <ContentScheduler />;
+      case "seo":
+        return <SEOManager />;
+      case "automations":
+        return <AutomationEngine />;
+      case "personalization":
+        return <PersonalizationEngine />;
+      case "backup":
+        return <BackupManager />;
       case "settings":
         return <SystemSettings />;
       default:
