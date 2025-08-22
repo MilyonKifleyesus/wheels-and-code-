@@ -58,19 +58,16 @@ const DEFAULTS: Settings = {
 };
 
 // Helper to transform flat DB rows into a nested Settings object
-const transformRowsToSettings = (rows: any[]): Settings => {
+const transformRowsToSettings = (rows: {key: string, value: any}[] | null): Settings => {
   const settingsObject: any = {};
-  rows.forEach(row => {
-      // The value from the DB is a JSON string, so we need to parse it.
-      // For simple strings from the DB like "Apex Name", the value is `'"Apex Name"'`. JSON.parse handles this.
-      // For JSON objects like '{"newBookings": true}', it also works.
-      try {
+  if (rows) {
+    rows.forEach(row => {
+        // The `value` column is of type jsonb, so supabase-js automatically parses it.
+        // No need for JSON.parse here.
         settingsObject[row.key] = row.value;
-      } catch (e) {
-        console.error(`Failed to parse setting key "${row.key}" with value:`, row.value);
-        settingsObject[row.key] = DEFAULTS[row.key as keyof Settings];
-      }
-  });
+    });
+  }
+  // Merge fetched settings over defaults to ensure all keys are present
   return { ...DEFAULTS, ...settingsObject };
 };
 
@@ -92,7 +89,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
 
       if (error) throw error;
 
-      const transformedSettings = transformRowsToSettings(data || []);
+      const transformedSettings = transformRowsToSettings(data);
       setSettings(transformedSettings);
 
     } catch (err: any) {
@@ -119,7 +116,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     try {
         if (!supabase) throw new Error("Supabase not available.");
 
-        const updates = Object.entries(newSettings).map(([key, value]) => ({
+        // We need to handle nested objects like 'notifications' correctly.
+        // The DB expects a key and a value. If we update a nested property,
+        // we must update the top-level key.
+        const currentSettings = { ...settings, ...newSettings };
+
+        const updates = Object.entries(currentSettings).map(([key, value]) => ({
             key,
             value
         }));
