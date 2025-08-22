@@ -121,14 +121,14 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
         .select(
           `
           id,
-          vehicle_info,
+          vehicle,
           booking_date,
           booking_time,
           status,
           notes,
           estimated_cost,
           actual_cost,
-          assigned_staff,
+          assigned_technician,
           created_at
         `
         )
@@ -152,14 +152,14 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({
           customerPhone: "(416) 555-0000",
           customerEmail: `customer${index + 1}@email.com`,
           service: "Service from Database",
-          vehicle: dbBooking.vehicle_info,
+          vehicle: dbBooking.vehicle,
           date: dbBooking.booking_date,
           time: dbBooking.booking_time,
           status: dbBooking.status as Booking["status"],
           notes: dbBooking.notes || undefined,
           estimatedCost: dbBooking.estimated_cost || undefined,
           actualCost: dbBooking.actual_cost || undefined,
-          assignedTechnician: dbBooking.assigned_staff || undefined,
+          assignedTechnician: dbBooking.assigned_technician || undefined,
           createdAt: dbBooking.created_at,
         }));
 
