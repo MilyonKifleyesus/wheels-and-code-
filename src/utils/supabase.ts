@@ -3,15 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Only create client if both URL and key are provided
+const supabase = supabaseUrl && supabaseKey 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // Test connection function
 export const testSupabaseConnection = async () => {
   console.log("🧪 Testing Supabase Connection...");
 
   if (!supabase) {
-    console.log("❌ Supabase client not available");
-    return { success: false, error: "Client not available" };
+    console.log("❌ Supabase client not available - missing environment variables");
+    return { success: false, error: "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables" };
   }
 
   try {
