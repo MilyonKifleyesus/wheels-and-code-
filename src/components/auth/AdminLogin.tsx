@@ -32,6 +32,8 @@ const AdminLogin: React.FC = () => {
     setIsSubmitting(true);
 
     console.log("🔐 Admin login attempt starting...");
+    console.log("📧 Email:", email);
+    console.log("🔑 Password length:", password.length);
 
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -51,6 +53,9 @@ const AdminLogin: React.FC = () => {
       return;
     }
 
+    console.log("🔧 Environment check passed");
+    console.log("🌐 Supabase URL:", supabaseUrl);
+    console.log("🔑 Supabase Key length:", supabaseKey.length);
     try {
       setSuccess("Signing in...");
 

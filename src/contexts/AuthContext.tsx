@@ -381,6 +381,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setLastLoginAttempt(Date.now());
       setLoginAttempts((prev) => prev + 1);
 
+      console.log("🔐 Starting sign in process...");
+      console.log("📧 Email:", email);
+      console.log("🔧 Supabase client available:", !!supabase);
       if (!supabase) {
         // Mock authentication for development
         if (
@@ -493,7 +496,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
 
       if (!supabase) {
+        console.log("⚠️ No Supabase client, using mock authentication");
         setLoading(false);
+        console.log("❌ Mock login failed - invalid credentials");
         return { success: false, error: "Authentication not configured" };
       }
 
@@ -546,6 +551,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           );
           const result = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/auth/reset-password`,
+          });
+          console.log("📊 Sign in response:", { 
+            hasData: !!data, 
+            hasUser: !!data?.user, 
+            hasSession: !!data?.session,
+            error: error?.message 
           });
 
           if (!result.error) {
