@@ -1,7 +1,7 @@
 -- Migration: Create Templates Table
 -- This migration adds a table for storing reusable page and section templates.
 
-CREATE TABLE public.templates (
+CREATE TABLE IF NOT EXISTS public.templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     name TEXT NOT NULL,
@@ -18,17 +18,26 @@ COMMENT ON TABLE public.templates IS 'Stores reusable page and section templates
 -- RLS Policies for templates
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public templates are viewable by everyone." ON public.templates;
 CREATE POLICY "Public templates are viewable by everyone." ON public.templates FOR SELECT TO authenticated, anon USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own templates." ON public.templates;
 CREATE POLICY "Users can insert their own templates." ON public.templates FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own templates." ON public.templates;
 CREATE POLICY "Users can update their own templates." ON public.templates FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own templates." ON public.templates;
 CREATE POLICY "Users can delete their own templates." ON public.templates FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Admins have full access." ON public.templates;
 CREATE POLICY "Admins have full access." ON public.templates FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 
 -- Migration: Create Design System Tables
 -- This migration adds tables for managing themes and design tokens.
 
-CREATE TABLE public.themes (
+CREATE TABLE IF NOT EXISTS public.themes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     name TEXT NOT NULL,
@@ -39,7 +48,7 @@ CREATE TABLE public.themes (
 
 COMMENT ON TABLE public.themes IS 'Manages different versions of design tokens as themes.';
 
-CREATE TABLE public.design_tokens (
+CREATE TABLE IF NOT EXISTS public.design_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     theme_id UUID NOT NULL REFERENCES public.themes(id) ON DELETE CASCADE,
@@ -53,13 +62,23 @@ COMMENT ON TABLE public.design_tokens IS 'Stores the actual design token data fo
 ALTER TABLE public.themes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.design_tokens ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all users to read themes" ON public.themes;
 CREATE POLICY "Allow all users to read themes" ON public.themes FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow admin users to manage themes" ON public.themes;
 CREATE POLICY "Allow admin users to manage themes" ON public.themes FOR ALL TO authenticated USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin') WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
+
+DROP POLICY IF EXISTS "Allow all users to read design tokens" ON public.design_tokens;
 CREATE POLICY "Allow all users to read design tokens" ON public.design_tokens FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow admin users to manage design tokens" ON public.design_tokens;
 CREATE POLICY "Allow admin users to manage design tokens" ON public.design_tokens FOR ALL TO authenticated USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin') WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
 
 -- Indexes to ensure data integrity
+DROP INDEX IF EXISTS single_active_theme_idx;
 CREATE UNIQUE INDEX single_active_theme_idx ON public.themes (is_active) WHERE is_active = true;
+
+DROP INDEX IF EXISTS single_staging_theme_idx;
 CREATE UNIQUE INDEX single_staging_theme_idx ON public.themes (is_staging) WHERE is_staging = true;
 
 -- Seed a default theme
@@ -69,7 +88,7 @@ DECLARE
   default_user_id UUID;
 BEGIN
   -- Get the ID of the admin user created earlier
-  SELECT id INTO default_user_id FROM auth.users WHERE email = 'mili.kifleyesus@gmail.com';
+  SELECT id INTO default_user_id FROM auth.users WHERE email = 'mili.kifleyesus@gmail.com' LIMIT 1;
 
   -- Insert the default theme only if it doesn't exist
   IF NOT EXISTS (SELECT 1 FROM public.themes WHERE name = 'Default Theme') THEN
