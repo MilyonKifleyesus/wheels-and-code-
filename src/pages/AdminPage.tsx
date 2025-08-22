@@ -16,7 +16,9 @@ import {
   Gift,
   TestTube,
   Clock,
-  Layers
+  Layers,
+  Search,
+  Shield
 } from "lucide-react";
 import AdminDashboard from "../components/admin/AdminDashboard";
 import InventoryManager from "../components/inventory/InventoryManager";
