@@ -11,7 +11,7 @@ const QuickActions: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
-      <div className="bg-dark-graphite/95 backdrop-blur-lg border border-gray-800 rounded-lg p-2">
+      <div className="bg-surface/95 backdrop-blur-lg border border-gray-800 rounded-lg p-2">
         <div className="grid grid-cols-4 gap-2">
           {actions.map((action) => {
             const Icon = action.icon;
@@ -21,8 +21,8 @@ const QuickActions: React.FC = () => {
                 href={action.href}
                 className={`flex flex-col items-center justify-center py-3 px-2 rounded-sm transition-all duration-300 active:scale-95 ${
                   action.primary
-                    ? 'bg-acid-yellow text-black hover:bg-neon-lime'
-                    : 'text-white hover:bg-gray-800'
+                    ? 'bg-primary text-background hover:bg-secondary'
+                    : 'text-text hover:bg-gray-800'
                 }`}
               >
                 <Icon className="w-5 h-5 mb-1" />

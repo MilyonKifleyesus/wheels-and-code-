@@ -26,12 +26,12 @@ const NewArrivals: React.FC = () => {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-text">
               {content.heading || 'NEW ARRIVALS'}
             </h2>
-            <p className="text-gray-400 mt-2">{content.description || 'Latest additions to our premium collection'}</p>
+            <p className="text-text-secondary mt-2">{content.description || 'Latest additions to our premium collection'}</p>
           </div>
-          <Link to="/inventory" className="hidden md:block text-acid-yellow hover:text-neon-lime transition-colors duration-300 text-sm font-bold tracking-wider">
+          <Link to="/inventory" className="hidden md:block text-primary hover:text-secondary transition-colors duration-300 text-sm font-bold tracking-wider">
             VIEW ALL →
           </Link>
         </div>
@@ -45,7 +45,7 @@ const NewArrivals: React.FC = () => {
           ) : (
             // Show loading placeholders
             Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="bg-dark-graphite border border-gray-800 rounded-lg overflow-hidden animate-pulse">
+              <div key={index} className="bg-surface border border-gray-800 rounded-lg overflow-hidden animate-pulse">
                 <div className="aspect-video bg-gray-700"></div>
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-gray-700 rounded w-3/4"></div>
@@ -59,7 +59,7 @@ const NewArrivals: React.FC = () => {
 
         {/* Mobile View All */}
         <div className="mt-6 md:hidden text-center">
-          <Link to="/inventory" className="text-acid-yellow hover:text-neon-lime transition-colors duration-300 text-sm font-bold tracking-wider">
+          <Link to="/inventory" className="text-primary hover:text-secondary transition-colors duration-300 text-sm font-bold tracking-wider">
             VIEW ALL INVENTORY →
           </Link>
         </div>

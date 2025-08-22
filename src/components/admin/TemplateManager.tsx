@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
-import { Save, Copy, Trash2, Plus, Layout, Eye, Edit, Download, Upload, Grid, List } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, Copy, Trash2, Plus, Layout, Eye, Edit, Download, Upload, Grid, List, Loader2 } from 'lucide-react';
 import Toast from '../ui/Toast';
+import { supabase } from '../../lib/supabase';
 
-interface Template {
+// This interface should match the structure of the `templates` table
+export interface Template {
   id: string;
+  created_at: string;
   name: string;
   type: 'page' | 'section' | 'block';
   category: string;
-  thumbnail: string;
-  sections: any[];
-  metadata: {
-    description: string;
-    tags: string[];
-    created: string;
-    lastUsed: string;
-    usageCount: number;
-  };
+  thumbnail?: string;
+  sections?: any; // JSONB
+  metadata?: any; // JSONB
+  user_id: string;
 }
 
 const TemplateManager: React.FC = () => {
@@ -26,65 +24,30 @@ const TemplateManager: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [templates, setTemplates] = useState<Template[]>([
-    {
-      id: '1',
-      name: 'Automotive Landing Page',
-      type: 'page',
-      category: 'landing',
-      thumbnail: 'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=400',
-      sections: [
-        { type: 'hero', title: 'Hero Section' },
-        { type: 'services', title: 'Services Preview' },
-        { type: 'inventory', title: 'Featured Vehicles' },
-        { type: 'trust', title: 'Trust Indicators' }
-      ],
-      metadata: {
-        description: 'Complete automotive business landing page with hero, services, and inventory sections',
-        tags: ['automotive', 'landing', 'business'],
-        created: '2024-01-15',
-        lastUsed: '2024-01-18',
-        usageCount: 12
-      }
-    },
-    {
-      id: '2',
-      name: 'Service Booking Flow',
-      type: 'page',
-      category: 'booking',
-      thumbnail: 'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=400',
-      sections: [
-        { type: 'hero', title: 'Booking Hero' },
-        { type: 'services', title: 'Service Selection' },
-        { type: 'contact', title: 'Contact Form' }
-      ],
-      metadata: {
-        description: 'Multi-step service booking flow with calendar integration',
-        tags: ['booking', 'service', 'form'],
-        created: '2024-01-10',
-        lastUsed: '2024-01-17',
-        usageCount: 8
-      }
-    },
-    {
-      id: '3',
-      name: 'Vehicle Showcase',
-      type: 'section',
-      category: 'inventory',
-      thumbnail: 'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=400',
-      sections: [
-        { type: 'inventory', title: 'Vehicle Grid' }
-      ],
-      metadata: {
-        description: 'Premium vehicle showcase with filtering and search',
-        tags: ['vehicles', 'inventory', 'showcase'],
-        created: '2024-01-12',
-        lastUsed: '2024-01-19',
-        usageCount: 15
-      }
+  const fetchTemplates = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching templates:', error);
+      setToastMessage('Failed to fetch templates.');
+      setToastType('error');
+      setShowToast(true);
+    } else {
+      setTemplates(data as Template[]);
     }
-  ]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
 
   const categories = [
     { id: 'all', name: 'All Templates' },
@@ -99,12 +62,19 @@ const TemplateManager: React.FC = () => {
     selectedCategory === 'all' || template.category === selectedCategory
   );
 
-  const handleCreateTemplate = (e: React.FormEvent) => {
+  const handleCreateTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     
-    const newTemplate: Template = {
-      id: Date.now().toString(),
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        setToastMessage('You must be logged in to create a template.');
+        setToastType('error');
+        setShowToast(true);
+        return;
+    }
+
+    const newTemplateData = {
       name: formData.get('name') as string,
       type: formData.get('type') as 'page' | 'section' | 'block',
       category: formData.get('category') as string,
@@ -113,43 +83,67 @@ const TemplateManager: React.FC = () => {
       metadata: {
         description: formData.get('description') as string,
         tags: (formData.get('tags') as string).split(',').map(tag => tag.trim()),
-        created: new Date().toISOString().split('T')[0],
         lastUsed: 'Never',
         usageCount: 0
-      }
+      },
+      user_id: user.id,
     };
 
-    setTemplates([...templates, newTemplate]);
-    setShowCreateForm(false);
-    setToastMessage('Template created successfully!');
-    setToastType('success');
+    const { error } = await supabase.from('templates').insert(newTemplateData);
+
+    if (error) {
+        console.error('Error creating template:', error);
+        setToastMessage('Failed to create template.');
+        setToastType('error');
+    } else {
+        setToastMessage('Template created successfully!');
+        setToastType('success');
+        setShowCreateForm(false);
+        fetchTemplates(); // Refresh the list
+    }
     setShowToast(true);
   };
 
-  const handleDuplicateTemplate = (template: Template) => {
-    const duplicated: Template = {
-      ...template,
-      id: Date.now().toString(),
-      name: `${template.name} (Copy)`,
-      metadata: {
-        ...template.metadata,
-        created: new Date().toISOString().split('T')[0],
-        lastUsed: 'Never',
-        usageCount: 0
-      }
+  const handleDuplicateTemplate = async (template: Template) => {
+    const { id, created_at, ...templateToCopy } = template;
+
+    const duplicatedData = {
+        ...templateToCopy,
+        name: `${template.name} (Copy)`,
+        metadata: {
+            ...template.metadata,
+            lastUsed: 'Never',
+            usageCount: 0
+        }
     };
 
-    setTemplates([...templates, duplicated]);
-    setToastMessage('Template duplicated successfully!');
-    setToastType('success');
+    const { error } = await supabase.from('templates').insert(duplicatedData);
+
+    if (error) {
+        console.error('Error duplicating template:', error);
+        setToastMessage('Failed to duplicate template.');
+        setToastType('error');
+    } else {
+        setToastMessage('Template duplicated successfully!');
+        setToastType('success');
+        fetchTemplates(); // Refresh the list
+    }
     setShowToast(true);
   };
 
-  const handleDeleteTemplate = (id: string) => {
+  const handleDeleteTemplate = async (id: string) => {
     if (confirm('Are you sure you want to delete this template?')) {
-      setTemplates(templates.filter(t => t.id !== id));
-      setToastMessage('Template deleted successfully!');
-      setToastType('success');
+      const { error } = await supabase.from('templates').delete().match({ id });
+
+      if (error) {
+        console.error('Error deleting template:', error);
+        setToastMessage('Failed to delete template.');
+        setToastType('error');
+      } else {
+        setToastMessage('Template deleted successfully!');
+        setToastType('success');
+        fetchTemplates(); // Refresh the list
+      }
       setShowToast(true);
     }
   };
@@ -270,82 +264,88 @@ const TemplateManager: React.FC = () => {
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTemplates.map((template) => (
-          <div key={template.id} className="bg-dark-graphite border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors duration-300">
-            <div className="aspect-video bg-gray-800 relative">
-              <img
-                src={template.thumbnail}
-                alt={template.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-2 left-2">
-                <span className={`px-2 py-1 rounded-sm text-xs font-bold ${
-                  template.type === 'page' ? 'bg-blue-500 text-white' :
-                  template.type === 'section' ? 'bg-green-500 text-white' :
-                  'bg-purple-500 text-white'
-                }`}>
-                  {template.type.toUpperCase()}
-                </span>
-              </div>
-              <div className="absolute top-2 right-2 flex space-x-1">
-                <button
-                  onClick={() => exportTemplate(template)}
-                  className="p-1 bg-black/50 text-white rounded-sm hover:bg-black/70 transition-colors duration-300"
-                >
-                  <Download className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => handleDuplicateTemplate(template)}
-                  className="p-1 bg-black/50 text-white rounded-sm hover:bg-black/70 transition-colors duration-300"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
+      {loading ? (
+        <div className="flex justify-center items-center p-12">
+            <Loader2 className="w-10 h-10 animate-spin text-acid-yellow" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTemplates.map((template) => (
+            <div key={template.id} className="bg-dark-graphite border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors duration-300">
+                <div className="aspect-video bg-gray-800 relative">
+                <img
+                    src={template.thumbnail || 'https://via.placeholder.com/400x225.png/000000/FFFFFF?text=No+Preview'}
+                    alt={template.name}
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 left-2">
+                    <span className={`px-2 py-1 rounded-sm text-xs font-bold ${
+                    template.type === 'page' ? 'bg-blue-500 text-white' :
+                    template.type === 'section' ? 'bg-green-500 text-white' :
+                    'bg-purple-500 text-white'
+                    }`}>
+                    {template.type.toUpperCase()}
+                    </span>
+                </div>
+                <div className="absolute top-2 right-2 flex space-x-1">
+                    <button
+                    onClick={() => exportTemplate(template)}
+                    className="p-1 bg-black/50 text-white rounded-sm hover:bg-black/70 transition-colors duration-300"
+                    >
+                    <Download className="w-3 h-3" />
+                    </button>
+                    <button
+                    onClick={() => handleDuplicateTemplate(template)}
+                    className="p-1 bg-black/50 text-white rounded-sm hover:bg-black/70 transition-colors duration-300"
+                    >
+                    <Copy className="w-3 h-3" />
+                    </button>
+                </div>
+                </div>
+
+                <div className="p-4 space-y-3">
+                <div>
+                    <h3 className="text-white font-bold">{template.name}</h3>
+                    <p className="text-gray-400 text-sm">{template.metadata?.description || 'No description'}</p>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                    {template.metadata?.tags?.map((tag: string) => (
+                    <span key={tag} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-sm">
+                        {tag}
+                    </span>
+                    ))}
+                </div>
+
+                <div className="text-xs text-gray-500 space-y-1">
+                    <p>Used {template.metadata?.usageCount || 0} times</p>
+                    <p>Last used: {template.metadata?.lastUsed || 'Never'}</p>
+                </div>
+
+                <div className="flex space-x-2">
+                    <button className="flex-1 bg-white/10 text-white py-2 rounded-sm hover:bg-white/20 transition-colors duration-300 flex items-center justify-center space-x-1">
+                    <Eye className="w-4 h-4" />
+                    <span>PREVIEW</span>
+                    </button>
+                    <button
+                    onClick={() => setEditingTemplate(template)}
+                    className="flex-1 bg-white/10 text-white py-2 rounded-sm hover:bg-white/20 transition-colors duration-300 flex items-center justify-center space-x-1"
+                    >
+                    <Edit className="w-4 h-4" />
+                    <span>EDIT</span>
+                    </button>
+                    <button
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="bg-red-500/20 text-red-400 px-3 py-2 rounded-sm hover:bg-red-500/30 transition-colors duration-300"
+                    >
+                    <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+                </div>
             </div>
-            
-            <div className="p-4 space-y-3">
-              <div>
-                <h3 className="text-white font-bold">{template.name}</h3>
-                <p className="text-gray-400 text-sm">{template.metadata.description}</p>
-              </div>
-              
-              <div className="flex flex-wrap gap-1">
-                {template.metadata.tags.map((tag) => (
-                  <span key={tag} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-sm">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>Used {template.metadata.usageCount} times</p>
-                <p>Last used: {template.metadata.lastUsed}</p>
-              </div>
-              
-              <div className="flex space-x-2">
-                <button className="flex-1 bg-white/10 text-white py-2 rounded-sm hover:bg-white/20 transition-colors duration-300 flex items-center justify-center space-x-1">
-                  <Eye className="w-4 h-4" />
-                  <span>PREVIEW</span>
-                </button>
-                <button
-                  onClick={() => setEditingTemplate(template)}
-                  className="flex-1 bg-white/10 text-white py-2 rounded-sm hover:bg-white/20 transition-colors duration-300 flex items-center justify-center space-x-1"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>EDIT</span>
-                </button>
-                <button
-                  onClick={() => handleDeleteTemplate(template.id)}
-                  className="bg-red-500/20 text-red-400 px-3 py-2 rounded-sm hover:bg-red-500/30 transition-colors duration-300"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Create Template Modal */}
       {showCreateForm && (
