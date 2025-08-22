@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Type, Spacing, Save, RefreshCw, Eye, Download, Upload } from 'lucide-react';
+import { Palette, Type, Ruler, Save, RefreshCw, Eye, Download, Upload } from 'lucide-react';
 import Toast from '../ui/Toast';
 
 interface DesignTokens {
@@ -114,7 +114,7 @@ const DesignTokenManager: React.FC = () => {
   const tabs = [
     { id: 'colors', label: 'Colors', icon: Palette },
     { id: 'typography', label: 'Typography', icon: Type },
-    { id: 'spacing', label: 'Spacing', icon: Spacing },
+    { id: 'spacing', label: 'Spacing', icon: Ruler },
   ];
 
   const handleTokenChange = (category: keyof DesignTokens, key: string, value: string) => {
