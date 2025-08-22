@@ -32,12 +32,14 @@ const HeroSection: React.FC = () => {
     setIsLoaded(true);
   }, []);
 
+  const imageUrl = content.imageUrl || "https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080";
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Hero Background Image */}
       <div className="absolute inset-0">
         <img
-          src="https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+          src={imageUrl}
           alt="Luxury automotive showroom"
           className={`w-full h-full object-cover transition-opacity duration-1000 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
