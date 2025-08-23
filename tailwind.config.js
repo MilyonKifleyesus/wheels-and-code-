@@ -7,14 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        'matte-black': '#0B0B0C',
-        'carbon-gray': '#141518',
-        'dark-graphite': '#1A1B1E',
-        'acid-yellow': '#D7FF00',
-        'neon-lime': '#C8FF1A',
-        'soft-white': '#F2F4F5',
-        'electric-blue': '#39FF14',
-        'neon-green': '#39FF14'
+        primary: 'var(--color-primary)',
+        secondary: 'var(--color-secondary)',
+        accent: 'var(--color-accent)',
+        background: 'var(--color-background)',
+        surface: 'var(--color-surface)',
+        text: 'var(--color-text)',
+        'text-secondary': 'var(--color-textSecondary)',
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        error: 'var(--color-error)',
+
+        // Backwards compatibility
+        'matte-black': 'var(--color-background)',
+        'carbon-gray': '#141518', // No direct mapping yet
+        'dark-graphite': 'var(--color-surface)',
+        'acid-yellow': 'var(--color-primary)',
+        'neon-lime': 'var(--color-secondary)',
+        'soft-white': 'var(--color-text)',
+        'electric-blue': 'var(--color-accent)',
+        'neon-green': 'var(--color-accent)',
       },
       animation: {
         'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

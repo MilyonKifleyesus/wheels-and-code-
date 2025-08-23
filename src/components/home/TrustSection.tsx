@@ -43,26 +43,26 @@ const TrustSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 bg-matte-black">
+    <section className="py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 text-acid-yellow fill-current" />
+                <Star key={i} className="w-6 h-6 text-primary fill-primary" />
               ))}
             </div>
-            <span className="text-2xl font-bold text-white">4.8</span>
-            <span className="text-gray-400">/ 187 reviews</span>
+            <span className="text-2xl font-bold text-text">4.8</span>
+            <span className="text-text-secondary">/ 187 reviews</span>
           </div>
           
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-text mb-4">
             {trustContent.content.heading || 'TRUSTED BY THOUSANDS'}
           </h2>
           
           {trustContent.content.description && (
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="text-text-secondary max-w-2xl mx-auto">
               {trustContent.content.description}
             </p>
           )}
@@ -71,21 +71,21 @@ const TrustSection: React.FC = () => {
         {/* Reviews */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-dark-graphite border border-gray-800 rounded-lg p-6">
+            <div key={review.id} className="bg-surface border border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex">
                   {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-acid-yellow fill-current" />
+                    <Star key={i} className="w-4 h-4 text-primary fill-primary" />
                   ))}
                 </div>
-                <span className="text-xs text-gray-500 tracking-wider">{review.service}</span>
+                <span className="text-xs text-text-secondary tracking-wider">{review.service}</span>
               </div>
               
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
+              <p className="text-text-secondary text-sm leading-relaxed mb-4">
                 "{review.text}"
               </p>
               
-              <p className="text-white font-medium text-sm">— {review.name}</p>
+              <p className="text-text font-medium text-sm">— {review.name}</p>
             </div>
           ))}
         </div>
@@ -96,11 +96,11 @@ const TrustSection: React.FC = () => {
             const Icon = badge.icon;
             return (
               <div key={badge.title} className="text-center group">
-                <div className="w-16 h-16 bg-acid-yellow/10 rounded-sm flex items-center justify-center mx-auto mb-4 group-hover:bg-acid-yellow/20 transition-colors duration-300">
-                  <Icon className="w-8 h-8 text-acid-yellow" />
+                <div className="w-16 h-16 bg-primary/10 rounded-sm flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors duration-300">
+                  <Icon className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-white font-bold tracking-wider mb-2">{badge.title}</h3>
-                <p className="text-gray-400 text-sm">{badge.description}</p>
+                <h3 className="text-text font-bold tracking-wider mb-2">{badge.title}</h3>
+                <p className="text-text-secondary text-sm">{badge.description}</p>
               </div>
             );
           })}
